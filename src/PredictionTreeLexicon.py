@@ -4,7 +4,7 @@ Created on 04.01.2016
 @author: Albert
 '''
 
-class MyClass(object):
+class PredictionTreeLexicon(object):
     '''
     classdocs
     '''

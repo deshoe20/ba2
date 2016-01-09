@@ -1,10 +1,10 @@
 '''
-Created on 04.01.2016
+Created on 07.01.2016
 
 @author: Albert
 '''
 
-class CanonicalLexicon(object):
+class PrefixTreeScanParser(object):
     '''
     classdocs
     '''
