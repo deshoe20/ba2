@@ -62,3 +62,10 @@ class MyNLTKTree(tree.Tree):
             result.add(self.getFringes(c))
         result.add(n)
         return result
+    
+'''    def getSpine(self):
+        result = []
+        for c in self:
+            result.add(self.getFringes(c))
+        return result'''
+        

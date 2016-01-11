@@ -29,5 +29,10 @@ class PLTAGParser(object):
     def parseSentence(self, sentence):
         result = Tree("s")
         tokens = word_tokenize(sentence, Util.getLang())
-        self.cache.add(Util.uid(), tokens)
+        #self.cache.add(Util.uid(), tokens)
+        for token in tokens:
+            #PrefixTreeScanParser.parse(result, token)
+            result = []
         return result
+    
+    
