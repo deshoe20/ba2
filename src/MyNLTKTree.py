@@ -11,11 +11,11 @@ class MyNLTKTree(tree.Tree):
     '''
 
 
-    def __init__(self, params):
+    def __init__(self, node, children=None):
         '''
         Constructor
         '''
-        super().__init__(self, params)
+        super().__init__(node, children)
         
     def adjunction(self, selfNode, other):
         """for n in reversed(self.nodes):

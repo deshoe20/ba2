@@ -11,8 +11,8 @@ class CanonicalLexiconTree(MyNLTKTree):
     '''
 
 
-    def __init__(self, params):
+    def __init__(self, node, children=None):
         '''
         Constructor
         '''
-        
+        super().__init__(node, children)

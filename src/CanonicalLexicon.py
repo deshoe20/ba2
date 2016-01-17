@@ -4,16 +4,17 @@ Created on 04.01.2016
 @author: Albert
 '''
 
-class CanonicalLexicon(list):
+class CanonicalLexicon(dict):
     '''
     classdocs
     '''
 
-    def __init__(self, params):
+    def __init__(self):
         '''
         Constructor
         '''
         
         
-    def append(self, tree):
-        self.append(tree)
+    def append(self, key , value):
+        self[key] = value
+        
