@@ -18,3 +18,4 @@ class CanonicalLexicon(dict):
     def append(self, key , value):
         self[key] = value
         
+    
