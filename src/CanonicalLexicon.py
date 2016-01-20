@@ -16,6 +16,9 @@ class CanonicalLexicon(dict):
         
         
     def append(self, key , value):
-        self[key] = value
+        if key in self:
+            self[key].append(value)
+        else:
+            self[key] = [value]
         
     
