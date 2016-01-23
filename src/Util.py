@@ -26,3 +26,8 @@ class Util(object):
         result = Util.i
         Util.i += 1 
         return result;
+    
+    @staticmethod
+    def objMatch(cls, s):
+        return getattr(cls, s.upper(), None)
+        

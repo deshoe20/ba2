@@ -3,12 +3,14 @@ Created on 11.01.2016
 
 @author: Albert
 '''
-import re, logging, CanonicalLexicon
-from CanonicalLexiconTree import CanonicalLexiconTree
+import re, logging, pickle
+from TAGTree import TAGTree
+from PredictionLexicon import PredictionLexicon
+from CanonicalLexicon import CanonicalLexicon
 
 #1    lassen    ADJ    (VP-HD^null_x (VP-HD^x_null* )(VP-*T2*-RE^x_x (PP-*T1*-OP^x_null! )(VP-HD^x_x (NP-OA[acc]^x_null! )(VP-HD^x_x (VP-OC^x_null! )(VP-HD^x_x (VZ-HD^x_x (PTKZU-PM^x_null! )(VZ-HD^x_x (VVINF-HD^x_x lassen<>))))))))
 
-LEX = CanonicalLexicon.CanonicalLexicon()
+LEX = None
 
 '''
 regular expression splitting the lexicon file lines into four groups
@@ -23,7 +25,7 @@ BO = '('
 BC = ')'
 
 #test if string is well formed
-def getTree(s):
+def getTree(s, treecls):
     i = 0
     def getInnerTrees(s):   
         #logging.info("Tree for %s" % s)     
@@ -36,11 +38,11 @@ def getTree(s):
             c = s[i]
             if isopen:
                 if c == BO:
-                    t = CanonicalLexiconTree(r, []) if t == None else t
+                    t = treecls(r, []) if t == None else t
                     t.extend(getInnerTrees(s))
                     i = i + (s.find(BC, i) - i)
                 elif c == BC:
-                    t = CanonicalLexiconTree(r, []) if t == None else t
+                    t = treecls(r, []) if t == None else t
                     result.append(t)
                     break
                 else:
@@ -51,32 +53,68 @@ def getTree(s):
         return result
     return getInnerTrees(s)
 
-def process(l):
+def process(l, lex, treecls):
     m = LINEPATTERN.match(l)
     if m:
         ts = m.group(4)
         comply = TREESTRINGPATTERN.match(ts)
         if comply:
-            t = getTree(ts)
+            t = getTree(ts, treecls)
             if t:
-                LEX.append(m.group(2), t[0])
+                if len(t) > 1:
+                    logging.error("Elementary lexicon tree entry has more than 1 root: %s\nFor line [%s]", (str(t), l))
+                else:
+                    lex.compatibleAppending(m.group(2), (m.group(1), t[0]))
             else:
                 logging.warning("getTree returned empty for: %s" % ts)
         else:
             logging.warning("Line has no valid tree group: %s" % ts)
     else:
         logging.warning("Line failed to comply: %s" % l)
-        
+
+def convertTAGLexiconToPython(lexcls, filename):
+    f = open(filename, 'r', encoding='utf-8')
+    lex = lexcls()
+#    i = 0
+    for line in f:
+        process(line, lex, TAGTree)
+#        i += 1
+#        if i > 2:
+#            break
+    logging.info("Length of lexicon: %d" % len(lex))
+    f.close()
+    return lex
+
+    
+def pickleLexicon(filename, lex):
+    f = open(filename, 'wb')
+    pickle.dump(lex, f)
+    f.close()
+
+def loadLexicon(filename):
+    f = open(filename, 'rb')
+    lex = pickle.load(f)
+    f.close()
+    return lex
+            
 def main():
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
-    f = open('res/freq-parser-lexicon-tag.txt', 'r', encoding='utf-8')
-    i = 0
-    for line in f:
-        process(line)
-        i += 1
-    print("Length of lexicon: %d" % len(LEX))
-    LEX['Zypern'][0].draw()
+    
+    #convert
+#    LEX = convertTAGLexiconToPython(PredictionLexicon, 'res/freq-parser-lexicon-prediction.txt')
+#    LEX = convertTAGLexiconToPython(CanonicalLexicon, 'res/freq-parser-lexicon-tag.txt')
+
+    #pickle
+#    pickleLexicon('res/pickeledTAGPredictionlexicon.pick', LEX)
+#    pickleLexicon('res/pickeledTAGlexicon.pick', LEX)
+    
+    #test
+    LEX = loadLexicon('res/pickeledTAGPredictionlexicon.pick')
+#    LEX = loadLexicon('res/pickeledTAGlexicon.pick')
+
+    LEX[1][1].draw()    
+#    LEX['gehört'][0][1].draw()
 
 if __name__ == '__main__':
     main()

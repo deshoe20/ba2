@@ -4,7 +4,7 @@ Created on 04.01.2016
 @author: Albert
 '''
 
-import MyNLTKTree
+import TAGTree
 from nltk.tree import Tree
 
 INPUTSTRING = "UN-Truppen hätten nun in den vier umkämpften Gebieten die Kontrolle übernommen."

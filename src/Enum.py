@@ -33,6 +33,9 @@ class PhrasalCategory(Enum):
     VP = 25 #verb phrase (non-finite)
     VZ = 26 #zu-marked infinitive
     VROOT = 27 #unbound feature value of a virtual root
+    
+    def __str__(self):
+        return str(self.name)
 
 class FunctionalCategory(Enum):
     '''
@@ -88,6 +91,9 @@ class FunctionalCategory(Enum):
     UC = 48 #unit component
     VO = 49 #vocative
     
+    def __str__(self):
+        return str(self.name)
+    
 class ElementaryTreeType(Enum):
     '''
     classdocs
@@ -96,4 +102,30 @@ class ElementaryTreeType(Enum):
     MOD = 2 #modifier tree
     ADJ = 3 #auxiliary tree
     
+    def __str__(self):
+        return str(self.name)
+    
+class MorphCase(Enum):
+    NOM = 1
+    GEN = 2
+    ACC = 3
+    DAT = 4
+    UNDEF = 5
+    
+    def __str__(self):
+        return str(self.name)
+    
+    @classmethod
+    def fromString(cls, s):
+        return getattr(cls, s.upper(), None)
+    
+class NodeType(Enum):
+    ROOT = 1
+    INNER = 2
+    SUBST = 3
+    FOOT = 4
+    UNDEF = 5
+    
+    def __str__(self):
+        return "!" if self == NodeType.SUBST else "*" if self == NodeType.FOOT else ""
     

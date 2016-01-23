@@ -15,7 +15,7 @@ class CanonicalLexicon(dict):
         '''
         
         
-    def append(self, key , value):
+    def compatibleAppending(self, key , value):
         if key in self:
             self[key].append(value)
         else:

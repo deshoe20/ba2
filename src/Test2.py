@@ -4,6 +4,8 @@ Created on 18.01.2016
 @author: Albert
 '''
 from nltk.tree import Tree
+from Util import Util
+from Enum import MorphCase
 
 BO = '('
 BC = ')'
@@ -38,6 +40,12 @@ def hans(s):
 
 if __name__ == '__main__':
     #t1 = hans("(1 (1.1)(1.2 (1.2.1)(1.2.2 (1.2.2.1 (1.2.2.1.1))(1.2.2.2 ))))")
-    t1 = hans("(AP-CJ^null_x (AP-HD^x_null* )(AP-CC^x_x (NM-HD^x_x (CARD-NMC^x_x 000<>))))")
-    print(t1)
-    t1[0].draw()
+    #t1 = hans("(AP-CJ^null_x (AP-HD^x_null* )(AP-CC^x_x (NM-HD^x_x (CARD-NMC^x_x 000<>))))")
+    #print(t1)
+    #t1[0].draw()
+    
+    #    else:
+    #        logging.error("%s.%s morphological string does not comply" % (self.__class__.__name__, "process"))
+    
+    mo = Util.objMatch(MorphCase, "acc")
+    print(type(mo))
