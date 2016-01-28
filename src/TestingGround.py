@@ -113,7 +113,8 @@ def main():
     LEX = loadLexicon('res/pickeledTAGPredictionlexicon.pick')
 #    LEX = loadLexicon('res/pickeledTAGlexicon.pick')
 
-    LEX[1][1].draw()    
+    logging.info("Length of lexicon: %d" % len(LEX))
+    LEX[10449][1].draw()    
 #    LEX['gehört'][0][1].draw()
 
 if __name__ == '__main__':

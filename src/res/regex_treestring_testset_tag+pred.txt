@@ -1,0 +1,29 @@
+﻿NP-SB[nom]^x_null!
+VVPP-HD^x_x gelegt<>
+NP-HD[acc]^x_null* 
+CARD-NK^x_x 1493<>
+$,^x_null! 
+PWAV-OA^1_null!
+VP-HD^1_1 
+NP-HD[dat]^2_2 
+S-OC$$VAFIN-HD$$^null_1 
+PTKZU-PM^1_null! 
+NP-PC[dat]^null_1
+DP-HD[dat]^2_null!
+S-CJ$$NP-SB[nom]$$^null_1 
+S-CJ$$NP-SB[nom]$$$$VVFIN-HD$$$$NP-OA[acc]$$^null_1 
+*T1*-DA^1_1 -
+NE-PNC^2_null! 
+S-RE^2_2
+T4*-DA^1_1 -
+XY^null_x "><>
+NP-PD[nom]$$VP-OC$$^null_x
+NP-SB[nom]$$DP-NK[nom]$$$$NN-NKHD$$^null_x 
+
+
+Regex:
+^([A-Z0-9$,.*]{1,10})[^a-zA-Z0-9$,.*].*\[([a-z]{3})\].*_\w+([*!])\s+.*[\s(\S+)<>]?$
+^([^-]+)(-([^\^]+))?\^([^_]+)_(\S+)(\s+([^\<\>]*)<>)?(\s+-)?\s*$
+([^\^]+([\$]?([\[])[^\^])?)
+
+^([^\-]+)(\-([^\[\$]+)(\[([^\]\$]+)\])?(\$.*\$)?)?\^([^_]+)_([\S]+)(\s+([^\<\>]*)<>)?(\s+-)?\s*$
