@@ -1,8 +1,8 @@
-'''
+"""
 Created on 11.01.2016
 
 @author: Albert
-'''
+"""
 import re, logging, pickle
 from TAGTree import TAGTree
 from PredictionLexicon import PredictionLexicon
@@ -12,19 +12,19 @@ from CanonicalLexicon import CanonicalLexicon
 
 LEX = None
 
-'''
+"""
 regular expression splitting the lexicon file lines into four groups
     first group is only the leading number in each line e.g. '1'
     second group is the entry string e.g. 'word' 
     third group is the elementary tree type e.g. 'ARG'
     fourth group is the tree structure for this word e.g. everything between the outer brackets      
-'''
+"""
 LINEPATTERN = re.compile('^([0-9]+)\s+(\S+)\s+(\w{3})\s+(\(.+\))\s*$', re.UNICODE)
 TREESTRINGPATTERN = re.compile('^\(.+\)$', re.UNICODE)
 BO = '('
 BC = ')'
 
-#test if string is well formed
+#TODO : move this into TAGTree class if possible (simpler attribute allocation)
 def getTree(s, treecls):
     i = 0
     def getInnerTrees(s):   
@@ -32,23 +32,26 @@ def getTree(s, treecls):
         nonlocal i
         result = []
         isopen = False
+        isroot = False
         r = ""
         t = None
         while (i < len(s)):
             c = s[i]
             if isopen:
                 if c == BO:
-                    t = treecls(r, []) if t == None else t
+                    t = t if t else treecls(r, [])
+                    if t and isroot: t.isCurrentRoot = True
                     t.extend(getInnerTrees(s))
                     i = i + (s.find(BC, i) - i)
                 elif c == BC:
-                    t = treecls(r, []) if t == None else t
+                    t = t if t else treecls(r, [])
                     result.append(t)
                     break
                 else:
                     r += c  
             elif c == BO:
                 isopen = True 
+                isroot = True if i == 0 else False
             i += 1 
         return result
     return getInnerTrees(s)
@@ -75,12 +78,12 @@ def process(l, lex, treecls):
 def convertTAGLexiconToPython(lexcls, filename):
     f = open(filename, 'r', encoding='utf-8')
     lex = lexcls()
-#    i = 0
+    i = 0
     for line in f:
         process(line, lex, TAGTree)
-#        i += 1
-#        if i > 2:
-#            break
+        i += 1
+        if i > 90000:
+            break
     logging.info("Length of lexicon: %d" % len(lex))
     f.close()
     return lex
@@ -103,19 +106,22 @@ def main():
     
     #convert
 #    LEX = convertTAGLexiconToPython(PredictionLexicon, 'res/freq-parser-lexicon-prediction.txt')
-#    LEX = convertTAGLexiconToPython(CanonicalLexicon, 'res/freq-parser-lexicon-tag.txt')
+    LEX = convertTAGLexiconToPython(CanonicalLexicon, 'res/freq-parser-lexicon-tag.txt')
 
     #pickle
 #    pickleLexicon('res/pickeledTAGPredictionlexicon.pick', LEX)
 #    pickleLexicon('res/pickeledTAGlexicon.pick', LEX)
     
     #test
-    LEX = loadLexicon('res/pickeledTAGPredictionlexicon.pick')
+#    LEX = loadLexicon('res/pickeledTAGPredictionlexicon.pick')
 #    LEX = loadLexicon('res/pickeledTAGlexicon.pick')
 
     logging.info("Length of lexicon: %d" % len(LEX))
-    LEX[10449][1].draw()    
-#    LEX['gehört'][0][1].draw()
+#    LEX[10449][1].draw()
+    print("Current fringe:\t%s" % str(LEX['gehört'][0][1].currentFringe()))
+    LEX['gehört'][0][1].draw()
+#    print(str(LEX['gehört'][0][1].currentRoot))
+#    print(str(LEX['gehört'][0][1][1][0].currentRoot))
 
 if __name__ == '__main__':
     main()

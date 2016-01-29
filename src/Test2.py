@@ -1,8 +1,8 @@
-'''
+"""
 Created on 18.01.2016
 
 @author: Albert
-'''
+"""
 from nltk.tree import Tree
 from Util import Util
 from Enum import MorphCase
@@ -51,7 +51,7 @@ if __name__ == '__main__':
     print(type(mo))
     
     
-'''
+"""
 %%% 18297
 prediction:    ADJ    (NP-PD[nom]^null_1 (NP-HD[nom]^1_null* )(NP-AG[gen]^1_1 (DP-NK[gen]^1_null! )(NP-HD[gen]^1_1 )))
 Von von    ADJ    (S^null_x (PP-MO^x_x (PP-HD^x_x (PP-HD^x_x (APPR-AC^x_x Von<>))(NP-PC^x_null! ))(APZR-AC^x_null! ))(S-HD^x_null* ))    --    
@@ -67,7 +67,7 @@ Verteidigungsministeriums Verteidigungsministerium    ADJ    (NP-PD[nom]^null_x 
 Von 1953 an war er Generaldirektor des Verteidigungsministeriums .
 APPR Von    CARD 1953    APZR an    VAFIN war    PPER er    NN Generaldirektor    ART des    NN Verteidigungsministeriums    $. .
 (S (S (PP (PP (PP (APPR Von))(NP (CARD 1953)))(APZR an))(S (VP (VP (VAFIN war))(NP[nom] (PPER er)))(NP[nom] (NP[nom] (NN Generaldirektor))(NP[gen] (DP[gen] (ART des))(NP[gen] (NN Verteidigungsministeriums))))))($. .))
-'''    
+"""    
     
     
     

@@ -1,22 +1,22 @@
-'''
+"""
 Created on 04.01.2016
 
 @author: Albert
-'''
+"""
 from nltk.tree import Tree
 from nltk.tokenize import sent_tokenize, word_tokenize
 from Util import Util
 
 class PLTAGParser(object):
-    '''
+    """
     classdocs
-    '''
+    """
     
 
     def __init__(self, params):
-        '''
+        """
         Constructor
-        '''
+        """
         
         
     def parseText(self, text):

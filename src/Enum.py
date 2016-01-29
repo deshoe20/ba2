@@ -1,8 +1,8 @@
-'''
+"""
 Created on 16.01.2016
 
 @author: Albert
-'''
+"""
 from enum import Enum
 
 class PhrasalCategory(Enum):
@@ -38,9 +38,9 @@ class PhrasalCategory(Enum):
         return str(self.name)
 
 class FunctionalCategory(Enum):
-    '''
+    """
     classdocs
-    '''
+    """
     UNDEF = 1 #&lt;not bound&gt;
     AC = 2 #adpositional case marker
     ADC = 3 #adjective component
@@ -95,9 +95,9 @@ class FunctionalCategory(Enum):
         return str(self.name)
     
 class ElementaryTreeType(Enum):
-    '''
+    """
     classdocs
-    '''
+    """
     ARG = 1 #initial tree
     MOD = 2 #modifier tree
     ADJ = 3 #auxiliary tree

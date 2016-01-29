@@ -1,19 +1,19 @@
-'''
+"""
 Created on 04.01.2016
 
 @author: Albert
-'''
+"""
 
 class Util(object):
-    '''
+    """
     classdocs
-    '''
+    """
 
 
     def __init__(self, params):
-        '''
+        """
         Constructor
-        '''
+        """
        
     
     @classmethod

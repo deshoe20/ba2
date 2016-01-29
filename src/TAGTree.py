@@ -1,34 +1,38 @@
-'''
+"""
 Created on 04.01.2016
 
 @author: Albert
-'''
+"""
 from nltk import tree
 import re, logging
 from Enum import MorphCase, NodeType
 
 class TAGTree(tree.Tree):
-    '''
+    """
     classdocs
-    '''
+    """
 
     morph = MorphCase.UNDEF
     isLexicalLeaf = False
+    isLeaf = False
     nodeType = NodeType.UNDEF
     upperNodeHalf = None
     lowerNodeHalf = None
+    isCurrentRoot = False
     
-    # TODO : unify all regex - ONE REGEX TO RULE THEM ALL! TO FIND THEM ALL!
+    # TODO : REMOVE US
     MORPHINFOPATTERN = re.compile('.*\[([a-z]{3})\].*', re.UNICODE)
     CATEGORYPATTERN = re.compile('^([A-Z0-9$,.*]{1,10})[^a-zA-Z0-9$,.*].*$', re.UNICODE)
     LEXICALLEAFPATTERN = re.compile('\s(\S+)<>', re.UNICODE)
     INTEGRATIONPATTERN = re.compile('_\w+([*!])\s+', re.UNICODE)
+     
+    # TODO : comment THEONEREGEX - ONE REGEX TO RULE THEM ALL! TO FIND THEM ALL!
     THEONEPATTERN = re.compile('^([^\-]+)(\-([^\[\$]+)(\[([^\]\$]+)\])?(\$.*\$)?)?\^([^_]+)_([\S]+)(\s+(.+)<>)?(\s+-)?\s*$', re.UNICODE)
 
     def __init__(self, node, children=None):
-        '''
+        """
         Constructor
-        '''
+        """
         # TODO : check for valid tree string
         if isinstance(node, str):
             # get phrasal category and set it as label for this tree
@@ -43,8 +47,11 @@ class TAGTree(tree.Tree):
         else:
             super().__init__(node, children)
 
-         
+    
     def process(self, match):
+        """
+        
+        """
         #functionalCategory = match.group(3)  # TODO : REMOVE ME
         morphologicalInfo = match.group(6)
         upperNodeHalfMarker = match.group(7)
@@ -60,8 +67,10 @@ class TAGTree(tree.Tree):
         if lowerNodeHalfMarker:
             if lowerNodeHalfMarker.endswith('!'):
                 self.nodeType = NodeType.SUBST
+                self.isLeaf = True # FIXME : check if it is the case in all cases
             elif lowerNodeHalfMarker.endswith('*'):
-                self.nodeType = NodeType.FOOT                
+                self.nodeType = NodeType.FOOT
+                self.isLeaf = True # FIXME : check if it is the case in all cases
             self.set_label(self.label() + str(self.nodeType))
         # try to determine and extract lexical leaf data
         if lexicalPayload:
@@ -97,26 +106,30 @@ class TAGTree(tree.Tree):
 
     def currentFringe(self):
         i = 0
-        v = len(self.fringes)
-        for n in reversed(self.fringes):
-            if n.isLexicalLeaf:
-                i = self.fringes.index(n)
-        for n in self.fringes[i+1:]:
+        v = 0
+        fs = self.getFringes()
+        for n in fs: # FIXME : optimize with reversed(fringes) if possible
+            if (n[0].isLexicalLeaf and n[1]) or (n[0].isCurrentRoot and not n[1]):
+                i = fs.index(n)
+            if ((n[0].isCurrentRoot and n[1]) or (n[0].isLeaf and not n[1])) and v == 0:
+                v = fs.index(n)
+        '''for n in fringes[i+1:]:
             if n.isLeaf:
-                v = self.fringes.index(v)
-        return self.fringes[i:v+1]
+                v = fringes.index(v)'''
+        return [x[0] for x in fs[i:v+1]]
                 
 
-    def getFringes(self, n):
-        result = [n]
-        for c in n.children:
-            result.add(self.getFringes(c))
-        result.add(n)
+    def getFringes(self):
+        result = [(self, False)]
+        if self is TAGTree:
+            for c in self:
+                result.extend(c.getFringes())
+        result.append((self, True))
         return result
     
-'''    def getSpine(self):
+"""    def getSpine(self):
         result = []
         for c in self:
             result.add(self.getFringes(c))
-        return result'''
+        return result"""
         

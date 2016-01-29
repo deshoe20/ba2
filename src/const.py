@@ -1,8 +1,8 @@
-'''
+"""
 Created on 04.01.2016
 
 @author: Albert
-'''
+"""
 
 import TAGTree
 from nltk.tree import Tree

@@ -1,16 +1,16 @@
-'''
+"""
 Created on 14.01.2016
 
 @author: Albert
-'''
+"""
 import re, logging
 from Enum import MorphCase, NodeType
 from TAGTree import TAGTree
 
 class CanonicalLexiconTree(TAGTree):
-    '''
+    """
     classdocs
-    '''
+    """
     morph = MorphCase.UNDEF
     isLexicalLeaf = False
     nodeType = NodeType.UNDEF
@@ -21,9 +21,9 @@ class CanonicalLexiconTree(TAGTree):
     INTEGRATIONPATTERN = re.compile('_\w+([*!])\s+', re.UNICODE)
 
     def __init__(self, node, children=None):
-        '''
+        """
         Constructor
-        '''
+        """
         # TODO : check for valid tree string
         if isinstance(node, str):
             # get phrasal category and set it as label for this tree
