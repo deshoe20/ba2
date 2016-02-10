@@ -32,7 +32,6 @@ def getTree(s, treecls):
         nonlocal i
         result = []
         isopen = False
-        isroot = False
         r = ""
         t = None
         while (i < len(s)):
@@ -40,7 +39,6 @@ def getTree(s, treecls):
             if isopen:
                 if c == BO:
                     t = t if t else treecls(r, [])
-                    if t and isroot: t.isCurrentRoot = True
                     t.extend(getInnerTrees(s))
                     i = i + (s.find(BC, i) - i)
                 elif c == BC:
@@ -51,7 +49,6 @@ def getTree(s, treecls):
                     r += c  
             elif c == BO:
                 isopen = True 
-                isroot = True if i == 0 else False
             i += 1 
         return result
     return getInnerTrees(s)
@@ -67,6 +64,7 @@ def process(l, lex, treecls):
                 if len(t) > 1:
                     logging.error("Elementary lexicon tree entry has more than 1 root: %s\nFor line [%s]", (str(t), l))
                 else:
+                    t[0].isCurrentRoot = True
                     lex.compatibleAppending(m.group(2), (m.group(1), t[0]))
             else:
                 logging.warning("getTree returned empty for: %s" % ts)
@@ -78,12 +76,12 @@ def process(l, lex, treecls):
 def convertTAGLexiconToPython(lexcls, filename):
     f = open(filename, 'r', encoding='utf-8')
     lex = lexcls()
-    i = 0
+#    i = 0
     for line in f:
         process(line, lex, TAGTree)
-        i += 1
-        if i > 90000:
-            break
+#        i += 1
+#        if i > 192256:
+#            break
     logging.info("Length of lexicon: %d" % len(lex))
     f.close()
     return lex
@@ -106,7 +104,7 @@ def main():
     
     #convert
 #    LEX = convertTAGLexiconToPython(PredictionLexicon, 'res/freq-parser-lexicon-prediction.txt')
-    LEX = convertTAGLexiconToPython(CanonicalLexicon, 'res/freq-parser-lexicon-tag.txt')
+#    LEX = convertTAGLexiconToPython(CanonicalLexicon, 'res/freq-parser-lexicon-tag.txt')
 
     #pickle
 #    pickleLexicon('res/pickeledTAGPredictionlexicon.pick', LEX)
@@ -114,14 +112,15 @@ def main():
     
     #test
 #    LEX = loadLexicon('res/pickeledTAGPredictionlexicon.pick')
-#    LEX = loadLexicon('res/pickeledTAGlexicon.pick')
+    LEX = loadLexicon('res/pickeledTAGlexicon.pick')
 
     logging.info("Length of lexicon: %d" % len(LEX))
 #    LEX[10449][1].draw()
-    print("Current fringe:\t%s" % str(LEX['gehört'][0][1].currentFringe()))
-    LEX['gehört'][0][1].draw()
-#    print(str(LEX['gehört'][0][1].currentRoot))
-#    print(str(LEX['gehört'][0][1][1][0].currentRoot))
+    cf = LEX['Altfälle'][1][1].currentFringe()
+    print("Current fringe:\t%s" % str(cf))
+    LEX['Altfälle'][1][1].draw()
+#    print(str(LEX['tot'][5][1].isCurrentRoot))
+#    print(str(LEX['gehört'][0][1][1][0].isCurrentRoot))
 
 if __name__ == '__main__':
     main()

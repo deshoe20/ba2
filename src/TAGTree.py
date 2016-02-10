@@ -84,7 +84,7 @@ class TAGTree(tree.Tree):
         #selfNode.initMarkers()
         
 
-    def substitution(self, other, selfNode):
+    def substitution(self, other):
         """for n in reversed(self.nodes):
             if n == selfNode:
                 n = other.root
@@ -103,27 +103,35 @@ class TAGTree(tree.Tree):
             r.add(c)
             r.add(self._getem(c, r))
         return r
+    
+    def hasNoMarkers(self):
+        result = False
+        if (self.upperNodeHalf is None and self.lowerNodeHalf is None): result = True
+        return result
 
+    
     def currentFringe(self):
+        """
+        Computes the fringe starting at the rightmost lexical leaf to either the next non lexical leaf or the root node.
+        return list of TAGTree nodes
+        """
         i = 0
         v = 0
         fs = self.getFringes()
-        for n in fs: # FIXME : optimize with reversed(fringes) if possible
-            if (n[0].isLexicalLeaf and n[1]) or (n[0].isCurrentRoot and not n[1]):
-                i = fs.index(n)
-            if ((n[0].isCurrentRoot and n[1]) or (n[0].isLeaf and not n[1])) and v == 0:
-                v = fs.index(n)
-        '''for n in fringes[i+1:]:
-            if n.isLeaf:
-                v = fringes.index(v)'''
+        for ci in range(len(fs) - 1, -1, -1):
+            if (fs[ci][0].isCurrentRoot and fs[ci][1]) or (fs[ci][0].isLeaf and not fs[ci][0].isLexicalLeaf and not fs[ci][1]):
+                v = ci
+            if fs[ci][0].isLexicalLeaf and fs[ci][1]:
+                i = ci
+                break
         return [x[0] for x in fs[i:v+1]]
                 
 
     def getFringes(self):
         result = [(self, False)]
-        if self is TAGTree:
-            for c in self:
-                result.extend(c.getFringes())
+        for c in self:
+            if type(c) is not TAGTree: break
+            result.extend(c.getFringes())
         result.append((self, True))
         return result
     
