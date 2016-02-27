@@ -7,6 +7,7 @@ import re, logging, pickle
 from TAGTree import TAGTree
 from PredictionLexicon import PredictionLexicon
 from CanonicalLexicon import CanonicalLexicon
+from nltk import tree
 
 #1    lassen    ADJ    (VP-HD^null_x (VP-HD^x_null* )(VP-*T2*-RE^x_x (PP-*T1*-OP^x_null! )(VP-HD^x_x (NP-OA[acc]^x_null! )(VP-HD^x_x (VP-OC^x_null! )(VP-HD^x_x (VZ-HD^x_x (PTKZU-PM^x_null! )(VZ-HD^x_x (VVINF-HD^x_x lassen<>))))))))
 
@@ -116,11 +117,15 @@ def main():
 
     logging.info("Length of lexicon: %d" % len(LEX))
 #    LEX[10449][1].draw()
-    cf = LEX['Altfälle'][1][1].currentFringe()
+    cf = LEX['Amaru'][0][1].currentFringe()
     print("Current fringe:\t%s" % str(cf))
-    LEX['Altfälle'][1][1].draw()
+    LEX['Amaru'][0][1].draw()
+    cf[2].set_label("HANT")
+    LEX['Amaru'][0][1].draw()
 #    print(str(LEX['tot'][5][1].isCurrentRoot))
 #    print(str(LEX['gehört'][0][1][1][0].isCurrentRoot))
+#    t = tree.Tree.fromstring('(S (S (NP[nom] (PPER Ich))(VP (VP (VP (VVFIN liebe))(NP[acc] (DP[acc] (PDAT dieses))(NP[acc] (NN Land))))(AVP (ADV sehr))))($. .))')
+#    t.draw()
 
 if __name__ == '__main__':
     main()

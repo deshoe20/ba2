@@ -6,6 +6,8 @@ Created on 04.01.2016
 from nltk import tree
 import re, logging
 from Enum import MorphCase, NodeType
+import copy
+from Util import Util
 
 class TAGTree(tree.Tree):
     """
@@ -76,27 +78,62 @@ class TAGTree(tree.Tree):
         if lexicalPayload:
             self.isLexicalLeaf = True
             self.append(lexicalPayload)
-        
-    def adjunction(self, selfNode, other):
-        """for n in reversed(self.nodes):
-            if n == node:
-                n.initMarkers()"""
-        #selfNode.initMarkers()
-        
+     
+    def adjunction(self, other): # TODO : implment markers
+        """
+        Adjoins the TAGTree other onto self. Adds other children to self and self children to the corresponding foot node in other.
+        """
+        if self.nodeType is NodeType.FOOT:
+            n = self._fetchAdjunctionFoot(other, self.getlabel)
+            if n is None:
+                logging.error("Adjunction failed - could not find corresponding node in %s" % str(other))
+                #raise RuntimeError("Adjunction failed - could not find corresponding node in %s" % str(self))
+            else:
+                c = []
+                c.extend(self)
+                self.clear()
+                self.extend(other)
+                self.nodeType = NodeType.INNER
+                n.extend(c)
+                n.nodeType = NodeType.INNER # TODO : debug me
+        else:
+            logging.warn("Can't adjoin on tree node with type: %s" % self.nodeType)
+    
+    def _fetchAdjunctionFoot(self, other, label):
+        result = None
+        if other.isLeaf and (other.getlabel() == label):
+            result = self
+        else:
+            for c in other:
+                if result is not None:
+                    logging.error("Adjunction restriction violation at %s" % str(other))
+                    #raise RuntimeError("Adjunction restriction violation at %s" % str(self))
+                result = c._gimmeLeafNodeWithLabel(label)
+        return result
 
-    def substitution(self, other):
-        """for n in reversed(self.nodes):
-            if n == selfNode:
-                n = other.root
-                _resetNodes(self.root)
-                exit"""
-        selfNode = other.root
-        self._resetNodes(self.root)
-
-    def _resetNodes(self, root):
-        self.root = root;
-        self.nodes = [self.root]
-        self._getem(self.root, self.nodes)
+    def substitution(self, other): # TODO : implment markers
+        """
+        Substitutes the TAGTree other onto self if possible. Therefore checking if self is of NodeType.SUBST. 
+        Does not check for correct morphological information or correct structure of the tree to join. 
+        This should be done in the calling method if required.
+        """
+        if self.nodeType is NodeType.SUBST:
+            self.extend(other)
+            if len(self) > 0:
+                self.nodeType = NodeType.INNER #changes node type to NodeType.INNER if substitution was successful and at least one child was added.
+        else:
+            logging.warn("Can't substitute on tree node with type: %s" % self.nodeType)
+            
+    def _markMe(self, ident = None): # TODO : testme
+        if ident is None:
+            ident = Util.uid()
+        else:
+            self.upperNodeHalf = ident
+        if len(self) > 0:
+            self.lowerNodeHalf = ident
+        for c in self:
+            c._markMe(ident)
+            
 
     def _getem(self, n, r):
         for c in n.children:
@@ -113,6 +150,7 @@ class TAGTree(tree.Tree):
     def currentFringe(self):
         """
         Computes the fringe starting at the rightmost lexical leaf to either the next non lexical leaf or the root node.
+        Searches for conditions met in the reversed list of all fringes of the self tree.
         return list of TAGTree nodes
         """
         i = 0
@@ -121,7 +159,7 @@ class TAGTree(tree.Tree):
         for ci in range(len(fs) - 1, -1, -1):
             if (fs[ci][0].isCurrentRoot and fs[ci][1]) or (fs[ci][0].isLeaf and not fs[ci][0].isLexicalLeaf and not fs[ci][1]):
                 v = ci
-            if fs[ci][0].isLexicalLeaf and fs[ci][1]:
+            if fs[ci][0].isLexicalLeaf and fs[ci][1]: # TODO : implement has no markers
                 i = ci
                 break
         return [x[0] for x in fs[i:v+1]]
@@ -135,9 +173,15 @@ class TAGTree(tree.Tree):
         result.append((self, True))
         return result
     
-"""    def getSpine(self):
+    def clone(self): # TODO : testme
+        """
+        Computes and returns an exact copy of new objects of self.
+        """
+        return copy.deepcopy(self)
+    
+    def getSpine(self):
         result = []
         for c in self:
             result.add(self.getFringes(c))
-        return result"""
+        return result
         
