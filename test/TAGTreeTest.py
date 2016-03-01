@@ -16,7 +16,7 @@ class TAGTreeTest(unittest.TestCase):
         self.LEX = pickle.load(f)
         f.close()
 
-    def testName(self):
+    def testclone(self):
         pass
 
 
