@@ -144,7 +144,7 @@ class TAGTree(tree.Tree):
     def verify(self, other):
         result = []
         if not isinstance(self.upperNodeHalf, int) and isinstance(self.lowerNodeHalf, int) and self.equals(other):
-            wholeother = TAGTree.tolist(other)
+            wholeother = iter(TAGTree.tolist(other))
             mark = self.lowerNodeHalf
             currentUpper = True
             currentOther = wholeother[0]
@@ -152,8 +152,20 @@ class TAGTree(tree.Tree):
             levelSelf = 1
 
             def corress2(self):
-                if ((currentUpper and (self.upperNodeHalf == mark)) or (not currentUpper and (self.lowerNodeHalf == mark))) and (currentOther.getlabel() == self.getlabel()):
+                if ((currentUpper and (self.upperNodeHalf == mark)) or (not currentUpper and (self.lowerNodeHalf == mark))) and (currentOther.getlabel() == self.getlabel()) and (levelOther == levelSelf):
                     result.append(self)
+                    if other.isleaf or not currentUpper:
+                        foundone()
+                for c in self:
+                    c.corress2()
+
+            def foundone():
+                if currentUpper:
+                    currentUpper = False
+                if not currentUpper or currentOther.isleaf():
+                    wholeother.next()
+                    currentOther = wholeother[0]
+                    levelOther = wholeother[1]
         else:
             for c in self:
                 c.verify(other)

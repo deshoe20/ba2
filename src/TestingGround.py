@@ -104,16 +104,16 @@ def main():
     logger.setLevel(logging.INFO)
     
     #convert
-#    LEX = convertTAGLexiconToPython(PredictionLexicon, 'res/freq-parser-lexicon-prediction.txt')
-#    LEX = convertTAGLexiconToPython(CanonicalLexicon, 'res/freq-parser-lexicon-tag.txt')
+#    LEX = convertTAGLexiconToPython(PredictionLexicon, '../res/freq-parser-lexicon-prediction.txt')
+#    LEX = convertTAGLexiconToPython(CanonicalLexicon, '../res/freq-parser-lexicon-tag.txt')
 
     #pickle
-#    pickleLexicon('res/pickeledTAGPredictionlexicon.pick', LEX)
-#    pickleLexicon('res/pickeledTAGlexicon.pick', LEX)
+#    pickleLexicon('../res/pickeledTAGPredictionlexicon.pick', LEX)
+#    pickleLexicon('../res/pickeledTAGlexicon.pick', LEX)
     
     #test
-#    LEX = loadLexicon('res/pickeledTAGPredictionlexicon.pick')
-    LEX = loadLexicon('res/pickeledTAGlexicon.pick')
+#    LEX = loadLexicon('../res/pickeledTAGPredictionlexicon.pick')
+    LEX = loadLexicon('../res/pickeledTAGlexicon.pick')
 
     logging.info("Length of lexicon: %d" % len(LEX))
 #    LEX[10449][1].draw()
