@@ -25,53 +25,55 @@ sehr sehr    ADJ    (VP-HD^null_x (VP-HD^x_null* )(AVP-MO^x_x (ADV-HD^x_x sehr<>
 
 class TAGTreeTest(unittest.TestCase):
 
+    @classmethod
+    def setUpClass(cls):
+        unittest.TestCase.setUp(cls)
+        f = open("../res/pickeledTAGlexicon.pick", 'rb')
+        cls.LEX = pickle.load(f)
+        f.close()
+        f = open("../res/pickeledTAGPredictionlexicon.pick", 'rb')
+        cls.PREDLEX = pickle.load(f)
+        f.close()
+        cls.ich = None
+        cls.liebe = None
+        cls.pred = None
+        cls.dieses = None
+        cls.land = None
+        cls.sehr = None
+        
     def setUp(self):
         unittest.TestCase.setUp(self)
-        f = open("../res/pickeledTAGlexicon.pick", 'rb')
-        self.LEX = pickle.load(f)
-        f.close()
+        self.p = TAGTreeTest
     
-    def testSubstitution(self):
-        self.ich = self.LEX['Ich'][0][1]
-        self.liebe = self.LEX['liebe'][4][1]
-        self.liebe[0].substitution(self.ich)
-        self.ich.draw()
-        self.liebe.draw()
+    def test_01_Substitution(self):
+        self.p.ich = self.p.LEX['Ich'][0][1].clone()
+        self.p.liebe = self.p.LEX['liebe'][4][1].clone()
+        self.p.liebe[0].substitution(self.p.ich)
+        self.p.liebe.draw()
     
-    def testSubstitution2(self):
-        self.ich = self.LEX['Ich'][0][1]
-        self.liebe = self.LEX['liebe'][4][1]
-        self.liebe[0].substitution(self.ich)
-        self.ich.draw()
-        self.liebe.draw()
+    def test_02_Substitution2(self):
+        self.p.pred = self.p.PREDLEX[8101][1].clone()
+        self.p.pred.mark()
+        self.p.liebe[1][1].substitution(self.p.pred)
+        self.p.liebe.draw()
     
-    def testPredictionSubstitution(self):
-        self.ich = self.LEX['Ich'][0][1]
-        self.liebe = self.LEX['liebe'][4][1]
-        self.liebe[0].substitution(self.ich)
-        self.ich.draw()
-        self.liebe.draw()
+    def test_03_PredictionSubstitution(self):
+        self.p.dieses = self.p.LEX['dieses'][1][1]
+        self.p.liebe[1][1][0].substitution(self.p.dieses)
+        self.p.liebe.draw()
     
-    def testVerify(self):
-        self.ich = self.LEX['Ich'][0][1]
-        self.liebe = self.LEX['liebe'][4][1]
-        self.liebe[0].substitution(self.ich)
-        self.ich.draw()
-        self.liebe.draw()
-    
-    def testAdjunction(self):
-        self.ich = self.LEX['Ich'][0][1]
-        self.liebe = self.LEX['liebe'][4][1]
-        self.liebe[0].substitution(self.ich)
-        self.ich.draw()
-        self.liebe.draw()
-        
-    def testClone(self):
+    def test_04_Verify(self):
         pass
-        #self.LEX['liebe'][0][1].draw()
+    
+    def test_05_Adjunction(self):
+        pass
+        
+    def test_06_Clone(self):
+        pass
+        #self.p.LEX['liebe'][0][1].draw()
 
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']
-    unittest.main()
+    unittest.main(sortTestMethodsUsing=False, failfast=True)
     
     

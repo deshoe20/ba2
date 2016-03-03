@@ -18,5 +18,5 @@ class PredictionLexicon(list):
     
     def compatibleAppending(self, key , value):
         if key != "prediction:":
-            logging.error("Given dataset doesn't seems to be of prediction type: %s" % str(key))
+            logging.error("Given dataset doesn't seem to be of prediction type: %s" % str(key))
         self.append(value)  

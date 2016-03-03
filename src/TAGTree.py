@@ -9,6 +9,7 @@ import logging
 from Enum import MorphCase, NodeType
 import copy
 from Util import Util
+from builtins import isinstance
 
 
 class TAGTree(tree.Tree):
@@ -17,8 +18,6 @@ class TAGTree(tree.Tree):
     """
 
     morph = MorphCase.UNDEF
-    isLexicalLeaf = False
-    isLeaf = False  # FIXME : kill me
     nodeType = NodeType.UNDEF
     upperNodeHalf = None
     lowerNodeHalf = None
@@ -76,16 +75,11 @@ class TAGTree(tree.Tree):
         if lowerNodeHalfMarker:
             if lowerNodeHalfMarker.endswith('!'):
                 self.nodeType = NodeType.SUBST
-                self.isLeaf = True
             elif lowerNodeHalfMarker.endswith('*'):
                 self.nodeType = NodeType.FOOT
-                # FIXME : check if it is the case in all cases
-                self.isLeaf = True
             self.set_label(self.label() + str(self.nodeType))
         # try to determine and extract lexical leaf data
         if lexicalPayload:
-            self.isLexicalLeaf = True
-            self.isLeaf = True
             self.append(lexicalPayload)
 
     def adjunction(self, other):
@@ -140,21 +134,31 @@ class TAGTree(tree.Tree):
         else:
             logging.warn(
                 "Can't substitute on tree node with type: %s" % self.nodeType)
+            
+    def findFirstMarker(self, other, exclude = []):
+        result = self.lowerNodeHalf
+        # since it is easier to test against the negative criteria
+        if not self.matches(other): # a possible marked node must atleast match the other node label
+            result = None
+        elif len(self) == 0: # a prediction tree with only one node does not make any sense
+            result = None
+        return result
 
     def verify(self, other):
-        result = []
-        if not isinstance(self.upperNodeHalf, int) and isinstance(self.lowerNodeHalf, int) and self.equals(other):
+        # notes: keep track which markers were already tested
+        marker = None
+        if not isinstance(self.upperNodeHalf, int) and isinstance(self.lowerNodeHalf, int) and self.matches(other):
             wholeother = iter(TAGTree.tolist(other))
             mark = self.lowerNodeHalf
             currentUpper = True
             currentOther = wholeother[0]
             levelOther = wholeother[1]
             levelSelf = 1
+            # set marker
 
             def corress2(self):
                 if ((currentUpper and (self.upperNodeHalf == mark)) or (not currentUpper and (self.lowerNodeHalf == mark))) and (currentOther.getlabel() == self.getlabel()) and (levelOther == levelSelf):
-                    result.append(self)
-                    if other.isleaf or not currentUpper:
+                    if other.isLeaf() or not currentUpper:
                         foundone()
                 for c in self:
                     c.corress2()
@@ -162,30 +166,52 @@ class TAGTree(tree.Tree):
             def foundone():
                 if currentUpper:
                     currentUpper = False
-                if not currentUpper or currentOther.isleaf():
+                if not currentUpper or currentOther.isLeaf():
                     wholeother.next()
                     currentOther = wholeother[0]
                     levelOther = wholeother[1]
         else:
             for c in self:
-                c.verify(other)
-        return result
+                marker = c.verify(other)
+                if marker is not None:
+                    break
+        if marker is not None:
+            self._removeMark(marker)
+        return marker
 
-    def equals(self, other):  # TODO : implement me
+    def matches(self, other):  # TODO : implement me
         return self.getlabel() == other.getlabel()
 
-    def mark(self, idfier=None):  # TODO : FIXME
-        if idfier is None:
-            idfier = Util.uid()
+    def mark(self, marker=None):  # TODO : testme
+        if marker is None:
+            marker = Util.uid()
         if not self.isLeaf():
-            self.lowerNodeHalf = idfier
+            self.lowerNodeHalf = marker
         if not self.isCurrentRoot:
-            self.upperNodeHalf = idfier
+            self.upperNodeHalf = marker
         for c in self:
-            c.mark(idfier)
+            c.mark(marker)
+            
+    def _removeMark(self, marker):
+        self.upperNodeHalf = 'x' if self.upperNodeHalf == marker else self.upperNodeHalf
+        self.lowerNodeHalf = 'x' if self.lowerNodeHalf == marker else self.lowerNodeHalf
+        for c in self:
+            c._removeMark(marker)
+            
 
     def hasNoMarkers(self):
-        return (self.upperNodeHalf is None and self.lowerNodeHalf is None)
+        result = True
+        if (isinstance(self.upperNodeHalf, int) or isinstance(self.lowerNodeHalf, int)):
+            result = False
+        else:
+            for c in self:
+                result = c.hasNoMarkers()
+                if not result:
+                    break
+        return result
+    
+    def hasNoMarker(self):
+        return not (isinstance(self.upperNodeHalf, int) or isinstance(self.lowerNodeHalf, int))
 
     def currentFringe(self):
         """
@@ -197,7 +223,7 @@ class TAGTree(tree.Tree):
         v = 0
         fs = self.getFringes()
         for ci in range(len(fs) - 1, -1, -1):
-            if (fs[ci][0].isCurrentRoot and fs[ci][1]) or (fs[ci][0].isLeaf and not fs[ci][0].isLexicalLeaf and not fs[ci][1]):
+            if (fs[ci][0].isCurrentRoot and fs[ci][1]) or (fs[ci][0].isLeaf() and not fs[ci][0].isLexicalLeaf() and not fs[ci][1]):
                 v = ci
             # TODO : implement has no markers
             if fs[ci][0].isLexicalLeaf and fs[ci][1]:
@@ -228,7 +254,10 @@ class TAGTree(tree.Tree):
         return not (self.isLexicalLeaf or (len(self) > 0))
 
     def isLeaf(self):
-        return (self.isLexicalLeaf or self.isEmpty())
+        return (self.isLexicalLeaf() or self.isEmpty())
+    
+    def isLexicalLeaf(self):
+        return True if ((len(self) == 1) and isinstance(self[0], str)) else False
 
 
 def tolist(tree, result=None, lvl=0):

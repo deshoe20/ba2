@@ -63,7 +63,7 @@ def process(l, lex, treecls):
             t = getTree(ts, treecls)
             if t:
                 if len(t) > 1:
-                    logging.error("Elementary lexicon tree entry has more than 1 root: %s\nFor line [%s]", (str(t), l))
+                    logging.error("Canonical lexicon tree entry has more than 1 root node: %s\nFor line [%s]", (str(t), l))
                 else:
                     t[0].isCurrentRoot = True
                     lex.compatibleAppending(m.group(2), (m.group(1), t[0]))
@@ -104,24 +104,24 @@ def main():
     logger.setLevel(logging.INFO)
     
     #convert
-#    LEX = convertTAGLexiconToPython(PredictionLexicon, '../res/freq-parser-lexicon-prediction.txt')
-#    LEX = convertTAGLexiconToPython(CanonicalLexicon, '../res/freq-parser-lexicon-tag.txt')
+    LEX = convertTAGLexiconToPython(PredictionLexicon, '../res/freq-parser-lexicon-prediction.txt')
+    LEX2 = convertTAGLexiconToPython(CanonicalLexicon, '../res/freq-parser-lexicon-tag.txt')
 
     #pickle
-#    pickleLexicon('../res/pickeledTAGPredictionlexicon.pick', LEX)
-#    pickleLexicon('../res/pickeledTAGlexicon.pick', LEX)
+    pickleLexicon('../res/pickeledTAGPredictionlexicon.pick', LEX)
+    pickleLexicon('../res/pickeledTAGlexicon.pick', LEX2)
     
     #test
 #    LEX = loadLexicon('../res/pickeledTAGPredictionlexicon.pick')
-    LEX = loadLexicon('../res/pickeledTAGlexicon.pick')
+#    LEX = loadLexicon('../res/pickeledTAGlexicon.pick')
 
     logging.info("Length of lexicon: %d" % len(LEX))
 #    LEX[10449][1].draw()
-    cf = LEX['Amaru'][0][1].currentFringe()
-    print("Current fringe:\t%s" % str(cf))
-    LEX['Amaru'][0][1].draw()
-    cf[2].set_label("HANT")
-    LEX['Amaru'][0][1].draw()
+#    cf = LEX['Amaru'][0][1].currentFringe()
+#    print("Current fringe:\t%s" % str(cf))
+#    LEX['Amaru'][0][1].draw()
+#    cf[2].set_label("HANT")
+#    LEX['Amaru'][0][1].draw()
 #    print(str(LEX['tot'][5][1].isCurrentRoot))
 #    print(str(LEX['gehört'][0][1][1][0].isCurrentRoot))
 #    t = tree.Tree.fromstring('(S (S (NP[nom] (PPER Ich))(VP (VP (VP (VVFIN liebe))(NP[acc] (DP[acc] (PDAT dieses))(NP[acc] (NN Land))))(AVP (ADV sehr))))($. .))')
