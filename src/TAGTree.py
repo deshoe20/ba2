@@ -136,51 +136,82 @@ class TAGTree(tree.Tree):
                 "Can't substitute on tree node with type: %s" % self.nodeType)
             
     def findFirstMarker(self, other, exclude = []):
-        result = self.lowerNodeHalf
-        # since it is easier to test against the negative criteria
-        if not self.matches(other): # a possible marked node must atleast match the other node label
-            result = None
-        elif len(self) == 0: # a prediction tree with only one node does not make any sense
-            result = None
+        """
+        Searches for the first occurrence of a marked node and returns marker integer value or none.
+        Optional parameter exclude takes a list of integer to be excluded as potential markers.
+        """
+        result = None
+        if self.matches(other): # a possible first marked node must atleast match the other root label
+            if len(self) > 0: # a prediction tree with Sonly one node does not make any sense
+                if isinstance(self.lowerNodeHalf, int) and (self.lowerNodeHalf != self.upperNodeHalf): # the marker 
+                    if self.lowerNodeHalf not in exclude:
+                        result = self.lowerNodeHalf
+        if result is None:
+            for c in self:
+                result = c.findFirstMarker(other, exclude)
+                if result is not None:
+                    break
+        return result
+    
+    def getNodesWithMarker(self, marker, level = 0):
+        """
+        
+        """
+        result = []
+        if ((self.lowerNodeHalf == marker) or (self.upperNodeHalf == marker)):
+            result.append((self, level))
+            level += 1
+        for c in self:
+            result.extend(c.getNodesWithMarker(marker, level)) 
+        return result
+    
+    def findCorrespondence(self, other, marker):
+        """
+        Kill Me With Fire
+        """
+        result = False
+        mN = self.getNodesWithMarker(marker) # only works with well marked trees i.e. via the mark method
+        oN = TAGTree.tolist(other)
+        upper = False
+        i = 0
+        maxLvl = max([x[1] for x in oN])
+        for n in mN:
+            check = n[0].matches(oN[i][0]) and (n[1] == oN[i][1])
+            if (upper and (n[0].upperNodeHalf == marker)):
+                if check:
+                    if ((n[0].isLeaf() and oN[i][0].isLeaf()) or (n[1] == maxLvl)):
+                        i += 1
+                    else:
+                        upper = False
+                else: # verification tree mismatch
+                    logging.info("Verification tree mismatch for %s against marker %s and %s" % (str(self), str(marker), str(other)))
+                    break
+            elif (upper and (n[0].upperNodeHalf != marker and n[0].lowerNodeHalf == marker)) or ((not upper) and (n[0].upperNodeHalf == marker)): # verification tree mismatch
+                    logging.info("Verification tree mismatch for %s against marker %s and %s" % (str(self), str(marker), str(other)))
+                    break     
+            if ((not upper) and (n[0].lowerNodeHalf == marker)):
+                if check:
+                    i += 1
+                    upper = True                    
+                else: # verification tree mismatch
+                    logging.info("Verification tree mismatch for %s against marker %s and %s" % (str(self), str(marker), str(other)))
+                    break
+        else: # loop finished successfully
+            self._removeMark(marker)
+            result = True            
         return result
 
     def verify(self, other):
-        # notes: keep track which markers were already tested
-        marker = None
-        if not isinstance(self.upperNodeHalf, int) and isinstance(self.lowerNodeHalf, int) and self.matches(other):
-            wholeother = iter(TAGTree.tolist(other))
-            mark = self.lowerNodeHalf
-            currentUpper = True
-            currentOther = wholeother[0]
-            levelOther = wholeother[1]
-            levelSelf = 1
-            # set marker
-
-            def corress2(self):
-                if ((currentUpper and (self.upperNodeHalf == mark)) or (not currentUpper and (self.lowerNodeHalf == mark))) and (currentOther.getlabel() == self.getlabel()) and (levelOther == levelSelf):
-                    if other.isLeaf() or not currentUpper:
-                        foundone()
-                for c in self:
-                    c.corress2()
-
-            def foundone():
-                if currentUpper:
-                    currentUpper = False
-                if not currentUpper or currentOther.isLeaf():
-                    wholeother.next()
-                    currentOther = wholeother[0]
-                    levelOther = wholeother[1]
-        else:
-            for c in self:
-                marker = c.verify(other)
-                if marker is not None:
-                    break
-        if marker is not None:
-            self._removeMark(marker)
-        return marker
+        markers = []
+        result = False
+        while(not result): # implicit test for result is None as in no new not yet tested markers could be found overall
+            marker = self.findFirstMarker(other, markers)
+            result = self.findCorrespondence(other, marker)
+            markers.append(marker)
+        return result
 
     def matches(self, other):  # TODO : implement me
-        return self.getlabel() == other.getlabel()
+        return self.label() == other.label()
 
     def mark(self, marker=None):  # TODO : testme
         if marker is None:
@@ -204,7 +235,7 @@ class TAGTree(tree.Tree):
         if (isinstance(self.upperNodeHalf, int) or isinstance(self.lowerNodeHalf, int)):
             result = False
         else:
-            for c in self:
+            for c in self: # its 05:30 a.m. and i got an error with string here - gn8
                 result = c.hasNoMarkers()
                 if not result:
                     break
@@ -263,7 +294,7 @@ class TAGTree(tree.Tree):
 def tolist(tree, result=None, lvl=0):
     if result is None:
         result = []
-    result.append(tree, lvl)
+    result.append((tree, lvl))
     for c in tree:
         tolist(c, result, lvl + 1)
     return result

@@ -63,7 +63,7 @@ def process(l, lex, treecls):
             t = getTree(ts, treecls)
             if t:
                 if len(t) > 1:
-                    logging.error("Canonical lexicon tree entry has more than 1 root node: %s\nFor line [%s]", (str(t), l))
+                    logging.error("Canonical lexicon tree entry has more than 1 root node: %s\nFor line [%s]" % (str(t), l))
                 else:
                     t[0].isCurrentRoot = True
                     lex.compatibleAppending(m.group(2), (m.group(1), t[0]))
