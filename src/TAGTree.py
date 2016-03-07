@@ -15,6 +15,10 @@ from builtins import isinstance
 class TAGTree(tree.Tree):
     """
     classdocs
+    
+    TodoNotes:
+    remove str catch in loops and override draw
+    solve the reflexive changes problem through appropriate cloning 
     """
 
     morph = MorphCase.UNDEF
@@ -22,13 +26,6 @@ class TAGTree(tree.Tree):
     upperNodeHalf = None
     lowerNodeHalf = None
     isCurrentRoot = False
-
-    # TODO : REMOVE US
-    MORPHINFOPATTERN = re.compile('.*\[([a-z]{3})\].*', re.UNICODE)
-    CATEGORYPATTERN = re.compile(
-        '^([A-Z0-9$,.*]{1,10})[^a-zA-Z0-9$,.*].*$', re.UNICODE)
-    LEXICALLEAFPATTERN = re.compile('\s(\S+)<>', re.UNICODE)
-    INTEGRATIONPATTERN = re.compile('_\w+([*!])\s+', re.UNICODE)
 
     # TODO : comment THEONEREGEX - ONE REGEX TO RULE THEM ALL! TO FIND THEM
     # ALL!
@@ -39,7 +36,6 @@ class TAGTree(tree.Tree):
         """
         Constructor
         """
-        # TODO : check for valid tree string
         if isinstance(node, str):
             # get phrasal category and set it as label for this tree
             m = self.__class__.THEONEPATTERN.match(node)
@@ -82,32 +78,35 @@ class TAGTree(tree.Tree):
         if lexicalPayload:
             self.append(lexicalPayload)
 
-    def adjunction(self, other):
+    def adjunction(self, other, markAsPredicted = False):
         """
         Adjoins the TAGTree other onto self. Adds other children to self and self children to the corresponding foot node in other.
         Blank adjoin - meaning checkup for validity and correctness should be in the calling method.
         """
-        if self.nodeType is NodeType.FOOT:
-            n = self._fetchAdjunctionFoot(other, self.getlabel)
-            if n is None:
-                logging.error(
-                    "Adjunction failed - could not find corresponding node in %s" % str(other))
-                #raise RuntimeError("Adjunction failed - could not find corresponding node in %s" % str(self))
-            else:
-                c = []
-                c.extend(self)
-                self.clear()
-                self.extend(other)
-                self.nodeType = NodeType.INNER
-                n.extend(c)
-                n.nodeType = NodeType.INNER  # TODO : debug me
+        n = self._fetchAdjunctionFoot(other, self.get_label())
+        if n is None:
+            logging.error(
+                "Adjunction failed - could not find corresponding node in %s" % str(other))
+            #raise RuntimeError("Adjunction failed - could not find corresponding node in %s" % str(self))
+        elif n.nodeType is NodeType.FOOT:
+            c = []
+            if markAsPredicted:
+                self.lowerNodeHalf = other.mark() # mark the adjoined subtree and the lower node half of the current node
+            c.extend(self)
+            self.clear()
+            self.extend(other)
+            self.nodeType = NodeType.INNER                
+            if (n.label().endswith("*")):
+                n.set_label(n.label[:-1])
+            n.extend(c)
+            n.nodeType = NodeType.INNER  # TODO : hug erm debug me
         else:
             logging.warn(
                 "Can't adjoin on tree node with type: %s" % self.nodeType)
 
     def _fetchAdjunctionFoot(self, other, label):
         result = None
-        if other.isLeaf() and (other.getlabel() == label):
+        if other.isLeaf() and (other.get_label() == label):
             result = self
         else:
             for c in other:
@@ -118,7 +117,7 @@ class TAGTree(tree.Tree):
                 result = c._gimmeLeafNodeWithLabel(label)
         return result
 
-    def substitution(self, other):
+    def substitution(self, other, markAsPredicted = False):
         """
         Substitutes the TAGTree other onto self if possible. Therefore checking if self is of NodeType.SUBST. 
         Does not check for correct morphological information or correct structure of the tree to join. 
@@ -127,6 +126,10 @@ class TAGTree(tree.Tree):
         """
         if self.nodeType is NodeType.SUBST:
             self.extend(other)
+            if (self.label().endswith("!")):
+                self.set_label(self.label()[:-1])
+            if markAsPredicted:
+                self.mark()
             if len(self) > 0:
                 # changes node type to NodeType.INNER if substitution was
                 # successful and at least one child was added.
@@ -141,16 +144,17 @@ class TAGTree(tree.Tree):
         Optional parameter exclude takes a list of integer to be excluded as potential markers.
         """
         result = None
-        if self.matches(other): # a possible first marked node must atleast match the other root label
+        if self.matches(other, True): # a possible first marked node must atleast match the other root label
             if len(self) > 0: # a prediction tree with Sonly one node does not make any sense
                 if isinstance(self.lowerNodeHalf, int) and (self.lowerNodeHalf != self.upperNodeHalf): # the marker 
                     if self.lowerNodeHalf not in exclude:
                         result = self.lowerNodeHalf
         if result is None:
             for c in self:
-                result = c.findFirstMarker(other, exclude)
-                if result is not None:
-                    break
+                if not isinstance(c, str):
+                    result = c.findFirstMarker(other, exclude)
+                    if result is not None:
+                        break
         return result
     
     def getNodesWithMarker(self, marker, level = 0):
@@ -162,7 +166,8 @@ class TAGTree(tree.Tree):
             result.append((self, level))
             level += 1
         for c in self:
-            result.extend(c.getNodesWithMarker(marker, level)) 
+            if not isinstance(c, str):
+                result.extend(c.getNodesWithMarker(marker, level)) 
         return result
     
     def findCorrespondence(self, other, marker):
@@ -175,28 +180,44 @@ class TAGTree(tree.Tree):
         upper = False
         i = 0
         maxLvl = max([x[1] for x in oN])
+        possibleCorrelatingParent = []
+        currentParent = []
+        currentLvl = 0
         for n in mN:
-            check = n[0].matches(oN[i][0]) and (n[1] == oN[i][1])
-            if (upper and (n[0].upperNodeHalf == marker)):
-                if check:
-                    if ((n[0].isLeaf() and oN[i][0].isLeaf()) or (n[1] == maxLvl)):
-                        i += 1
+            foundCorrelation = False
+            if (currentLvl != 0) and (n[1] <= currentLvl):
+                currentParent.pop()
+            currentLvl = n[1]
+            while(not foundCorrelation and (i < len(oN))):
+                check = n[0].matches(oN[i][0], True) and (currentLvl == oN[i][1])
+                if (upper and (n[0].upperNodeHalf == marker)):
+                    if check:
+                        if ((n[0].isLeaf() and oN[i][0].isLeaf()) or (n[1] == maxLvl)):
+                            i += 1
+                        else:
+                            upper = False
+                        foundCorrelation = True
                     else:
-                        upper = False
-                else: # verification tree mismatch
-                    logging.info("Verification tree mismatch for %s against marker %s and %s" % (str(self), str(marker), str(other)))
-                    break
-            elif (upper and (n[0].upperNodeHalf != marker and n[0].lowerNodeHalf == marker)) or ((not upper) and (n[0].upperNodeHalf == marker)): # verification tree mismatch
-                    logging.info("Verification tree mismatch for %s against marker %s and %s" % (str(self), str(marker), str(other)))
-                    break     
-            if ((not upper) and (n[0].lowerNodeHalf == marker)):
-                if check:
+                        possibleCorrelatingParent.append((currentParent[-1], oN[i]))
+                        i += 1
+                elif (upper and (n[0].upperNodeHalf != marker and n[0].lowerNodeHalf == marker)) or ((not upper) and (n[0].upperNodeHalf == marker)): # verification tree mismatch
+                        logging.info("Verification tree mismatch for %s against marker %s and %s" % (str(self), str(marker), str(other)))
+                        break
+                if ((not upper) and (n[0].lowerNodeHalf == marker)):
+                    if check:
+                        upper = True
+                        foundCorrelation = True
+                    else:
+                        possibleCorrelatingParent.append((currentParent[-1], oN[i]))
                     i += 1
-                    upper = True                    
-                else: # verification tree mismatch
-                    logging.info("Verification tree mismatch for %s against marker %s and %s" % (str(self), str(marker), str(other)))
-                    break
+            currentParent.append(n[0])
         else: # loop finished successfully
+            if oN[i][1] == maxLvl: 
+                currentParent[-1].extend([x[0] for x in oN[i:] if x[1] == maxLvl])
+            elif oN[i][1] == (maxLvl + 1):
+                mN[-1].extend([x[0] for x in oN[i:] if x[1] == (maxLvl + 1)])
+            for e in possibleCorrelatingParent:
+                e[0].append(e[1])
             self._removeMark(marker)
             result = True            
         return result
@@ -204,30 +225,42 @@ class TAGTree(tree.Tree):
     def verify(self, other):
         markers = []
         result = False
-        while(not result): # implicit test for result is None as in no new not yet tested markers could be found overall
+        while(not result and (markers[-1] if len(markers) > 0 else True)): # implicit test for result is None as in no new not yet tested markers could be found overall
             marker = self.findFirstMarker(other, markers)
             result = self.findCorrespondence(other, marker)
             markers.append(marker)
         return result
 
-    def matches(self, other):  # TODO : implement me
-        return self.label() == other.label()
+    def matches(self, other, onlyMarked = False):  # TODO : implement me
+        result = False
+        if (isinstance(self.upperNodeHalf, int) or isinstance(self.lowerNodeHalf, int)):
+            trimmedSelfLabel = self.label()[:-1] if (self.label().endswith("!") or self.label().endswith("*")) else self.label()
+            trimmedOtherLabel = other.label()[:-1] if (other.label().endswith("!") or other.label().endswith("*")) else other.label()
+            result = (trimmedSelfLabel == trimmedOtherLabel)
+        elif(not onlyMarked):
+            result = self.label() == other.label()
+        return result
 
-    def mark(self, marker=None):  # TODO : testme
+    def mark(self, marker=None):
+        markedRoot = False
         if marker is None:
             marker = Util.uid()
+            markedRoot = True
         if not self.isLeaf():
             self.lowerNodeHalf = marker
-        if not self.isCurrentRoot:
+        if not markedRoot:
             self.upperNodeHalf = marker
         for c in self:
-            c.mark(marker)
+            if not isinstance(c, str):
+                c.mark(marker)
+        return marker
             
     def _removeMark(self, marker):
         self.upperNodeHalf = 'x' if self.upperNodeHalf == marker else self.upperNodeHalf
         self.lowerNodeHalf = 'x' if self.lowerNodeHalf == marker else self.lowerNodeHalf
         for c in self:
-            c._removeMark(marker)
+            if not isinstance(c, str):
+                c._removeMark(marker)
             
 
     def hasNoMarkers(self):
@@ -236,9 +269,10 @@ class TAGTree(tree.Tree):
             result = False
         else:
             for c in self: # its 05:30 a.m. and i got an error with string here - gn8
-                result = c.hasNoMarkers()
-                if not result:
-                    break
+                if not isinstance(c, str):
+                    result = c.hasNoMarkers()
+                    if not result:
+                        break
         return result
     
     def hasNoMarker(self):
@@ -290,11 +324,12 @@ class TAGTree(tree.Tree):
     def isLexicalLeaf(self):
         return True if ((len(self) == 1) and isinstance(self[0], str)) else False
 
-
-def tolist(tree, result=None, lvl=0):
-    if result is None:
-        result = []
-    result.append((tree, lvl))
-    for c in tree:
-        tolist(c, result, lvl + 1)
-    return result
+    @staticmethod
+    def tolist(tree, result=None, lvl=0):
+        if result is None:
+            result = []
+        result.append((tree, lvl))
+        for c in tree:
+            if not isinstance(c, str):
+                TAGTree.tolist(c, result, lvl + 1)
+        return result

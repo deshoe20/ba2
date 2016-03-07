@@ -49,25 +49,24 @@ class TAGTreeTest(unittest.TestCase):
         self.p.ich = self.p.LEX['Ich'][0][1]
         self.p.liebe = self.p.LEX['liebe'][4][1].clone()
         self.p.liebe[0].substitution(self.p.ich)
-        self.p.liebe.draw()
     
-    def test_02_Substitution2(self):
+    def test_02_PredictionSubstitution(self):
         self.p.pred = self.p.PREDLEX[8101][1].clone()
-        self.p.pred.mark()
-        self.p.liebe[1][1].substitution(self.p.pred)
-        self.p.liebe.draw()
+        self.p.liebe[1][1].substitution(self.p.pred, True)
     
-    def test_03_PredictionSubstitution(self):
+    def test_03_Substitution(self):
         self.p.dieses = self.p.LEX['dieses'][1][1]
         self.p.liebe[1][1][0].substitution(self.p.dieses)
-        self.p.liebe.draw()
     
     def test_04_Verify(self):
         self.p.land = self.p.LEX['Land'][10][1]
         self.assertTrue(self.p.liebe.verify(self.p.land))
     
     def test_05_Adjunction(self):
-        pass
+        self.p.sehr = self.p.LEX['sehr'][33][1].clone()
+        self.p.liebe[1].adjunction(self.p.sehr)
+        self.p.liebe.draw()
+        
         
     def test_06_Clone(self):
         pass
