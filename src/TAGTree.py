@@ -83,7 +83,7 @@ class TAGTree(tree.Tree):
         Adjoins the TAGTree other onto self. Adds other children to self and self children to the corresponding foot node in other.
         Blank adjoin - meaning checkup for validity and correctness should be in the calling method.
         """
-        n = self._fetchAdjunctionFoot(other, self.get_label())
+        n = other._fetchAdjunctionFoot()
         if n is None:
             logging.error(
                 "Adjunction failed - could not find corresponding node in %s" % str(other))
@@ -97,24 +97,24 @@ class TAGTree(tree.Tree):
             self.extend(other)
             self.nodeType = NodeType.INNER                
             if (n.label().endswith("*")):
-                n.set_label(n.label[:-1])
+                n.set_label(n.label()[:-1])
             n.extend(c)
             n.nodeType = NodeType.INNER  # TODO : hug erm debug me
         else:
             logging.warn(
                 "Can't adjoin on tree node with type: %s" % self.nodeType)
 
-    def _fetchAdjunctionFoot(self, other, label):
+    def _fetchAdjunctionFoot(self, root = None):
         result = None
-        if other.isLeaf() and (other.get_label() == label):
+        root = self if root is None else root
+        if self.isLeaf() and self.matches(root, True):
             result = self
         else:
-            for c in other:
-                if result is not None:
-                    logging.error(
-                        "Adjunction restriction violation at %s" % str(other))
-                    #raise RuntimeError("Adjunction restriction violation at %s" % str(self))
-                result = c._gimmeLeafNodeWithLabel(label)
+            for c in self:
+                if not isinstance(c, str):
+                    result = c._fetchAdjunctionFoot(root)
+                    if result is not None:
+                        break
         return result
 
     def substitution(self, other, markAsPredicted = False):
@@ -179,7 +179,7 @@ class TAGTree(tree.Tree):
         oN = TAGTree.tolist(other)
         upper = False
         i = 0
-        maxLvl = max([x[1] for x in oN])
+        maxLvl = max([x[1] for x in mN])
         possibleCorrelatingParent = []
         currentParent = []
         currentLvl = 0
@@ -192,7 +192,7 @@ class TAGTree(tree.Tree):
                 check = n[0].matches(oN[i][0], True) and (currentLvl == oN[i][1])
                 if (upper and (n[0].upperNodeHalf == marker)):
                     if check:
-                        if ((n[0].isLeaf() and oN[i][0].isLeaf()) or (n[1] == maxLvl)):
+                        if (oN[i][0].isLeaf() or (n[1] == maxLvl)):
                             i += 1
                         else:
                             upper = False
@@ -215,7 +215,7 @@ class TAGTree(tree.Tree):
             if oN[i][1] == maxLvl: 
                 currentParent[-1].extend([x[0] for x in oN[i:] if x[1] == maxLvl])
             elif oN[i][1] == (maxLvl + 1):
-                mN[-1].extend([x[0] for x in oN[i:] if x[1] == (maxLvl + 1)])
+                mN[-1][0].extend([x[0] for x in oN[i:] if x[1] == (maxLvl + 1)])
             for e in possibleCorrelatingParent:
                 e[0].append(e[1])
             self._removeMark(marker)
@@ -231,13 +231,13 @@ class TAGTree(tree.Tree):
             markers.append(marker)
         return result
 
-    def matches(self, other, onlyMarked = False):  # TODO : implement me
+    def matches(self, other, ignoreAffix = False):  # TODO : implement me
         result = False
-        if (isinstance(self.upperNodeHalf, int) or isinstance(self.lowerNodeHalf, int)):
+        if (ignoreAffix):
             trimmedSelfLabel = self.label()[:-1] if (self.label().endswith("!") or self.label().endswith("*")) else self.label()
             trimmedOtherLabel = other.label()[:-1] if (other.label().endswith("!") or other.label().endswith("*")) else other.label()
             result = (trimmedSelfLabel == trimmedOtherLabel)
-        elif(not onlyMarked):
+        else:
             result = self.label() == other.label()
         return result
 
@@ -316,10 +316,10 @@ class TAGTree(tree.Tree):
         return result
 
     def isEmpty(self):
-        return not (self.isLexicalLeaf or (len(self) > 0))
+        return not (self.isLexicalLeaf() or (len(self) > 0))
 
     def isLeaf(self):
-        return (self.isLexicalLeaf() or self.isEmpty())
+        return self.isEmpty()
     
     def isLexicalLeaf(self):
         return True if ((len(self) == 1) and isinstance(self[0], str)) else False
