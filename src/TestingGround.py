@@ -4,7 +4,7 @@ Created on 11.01.2016
 @author: Albert
 """
 import re, logging, pickle
-from TAGTree import TAGTree
+from PLTAGTree import PLTAGTree
 from PredictionLexicon import PredictionLexicon
 from CanonicalLexicon import CanonicalLexicon
 from nltk import tree
@@ -25,7 +25,7 @@ TREESTRINGPATTERN = re.compile('^\(.+\)$', re.UNICODE)
 BO = '('
 BC = ')'
 
-#TODO : move this into TAGTree class if possible (simpler attribute allocation)
+#TODO : move this into PLTAGTree class if possible (simpler attribute allocation)
 def getTree(s, treecls):
     i = 0
     def getInnerTrees(s):   
@@ -79,7 +79,7 @@ def convertTAGLexiconToPython(lexcls, filename):
     lex = lexcls()
 #    i = 0
     for line in f:
-        process(line, lex, TAGTree)
+        process(line, lex, PLTAGTree)
 #        i += 1
 #        if i > 192256:
 #            break

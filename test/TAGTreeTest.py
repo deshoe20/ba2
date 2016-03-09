@@ -4,7 +4,6 @@ Created on 27.02.2016
 @author: Albert
 """
 import unittest
-import TAGTree
 import pickle
 
 """
@@ -40,6 +39,7 @@ class TAGTreeTest(unittest.TestCase):
         cls.dieses = None
         cls.land = None
         cls.sehr = None
+        cls.fullstop = None
         
     def setUp(self):
         unittest.TestCase.setUp(self)
