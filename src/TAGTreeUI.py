@@ -16,7 +16,7 @@ class TAGTreeUI(object):
     # Copyright (C) 2001-2015 NLTK Project
     # Author: Edward Loper <edloper@gmail.com>
     # URL: <http://nltk.org/>
-    redistributed and modified under http://www.apache.org/licenses/LICENSE-2.0 by Benjamin Kosmehl
+    redistributed and modified under its license http://www.apache.org/licenses/LICENSE-2.0 by Benjamin Kosmehl
     """
 
 
