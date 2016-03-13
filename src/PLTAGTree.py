@@ -477,7 +477,7 @@ class PLTAGTree(tree.Tree):
         """
         return not (isinstance(self.upperNodeHalf, int) or isinstance(self.lowerNodeHalf, int))
 
-    def currentFringe(self):
+    def getCurrentFringe(self):
         """
         Computes the fringe starting at the rightmost lexical leaf to either the next non lexical leaf or the root node.
         Searches for conditions met in the reversed list of all fringes of the self tree.

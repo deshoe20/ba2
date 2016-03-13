@@ -6,7 +6,7 @@ Created on 11.01.2016
 import re, logging, pickle
 from PLTAGTree import PLTAGTree
 from PredictionLexicon import PredictionLexicon
-from CanonicalLexicon import CanonicalLexicon
+from ElementaryLexicon import ElementaryLexicon
 from nltk import tree
 
 #1    lassen    ADJ    (VP-HD^null_x (VP-HD^x_null* )(VP-*T2*-RE^x_x (PP-*T1*-OP^x_null! )(VP-HD^x_x (NP-OA[acc]^x_null! )(VP-HD^x_x (VP-OC^x_null! )(VP-HD^x_x (VZ-HD^x_x (PTKZU-PM^x_null! )(VZ-HD^x_x (VVINF-HD^x_x lassen<>))))))))
@@ -105,7 +105,7 @@ def main():
     
     #convert
     LEX = convertTAGLexiconToPython(PredictionLexicon, '../res/freq-parser-lexicon-prediction.txt')
-    LEX2 = convertTAGLexiconToPython(CanonicalLexicon, '../res/freq-parser-lexicon-tag.txt')
+    LEX2 = convertTAGLexiconToPython(ElementaryLexicon, '../res/freq-parser-lexicon-tag.txt')
 
     #pickle
     pickleLexicon('../res/pickeledTAGPredictionlexicon.pick', LEX)

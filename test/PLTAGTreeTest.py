@@ -4,11 +4,11 @@ Created on 27.02.2016
 @author: Albert
 """
 import unittest
-import pickle
+from Util import Util
 
 """
 %%% 26494
-Ich liebe dieses Land sehr .
+Ich liebe dieses Land sehr.
 PPER Ich    VVFIN liebe    PDAT dieses    NN Land    ADV sehr    $. .
 (S (S (NP[nom] (PPER Ich))(VP (VP (VP (VVFIN liebe))(NP[acc] (DP[acc] (PDAT dieses))(NP[acc] (NN Land))))(AVP (ADV sehr))))($. .))
 
@@ -27,12 +27,8 @@ class PLTAGTreeTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         unittest.TestCase.setUp(cls)
-        f = open("../res/pickeledTAGlexicon.pick", 'rb')
-        cls.LEX = pickle.load(f)
-        f.close()
-        f = open("../res/pickeledTAGPredictionlexicon.pick", 'rb')
-        cls.PREDLEX = pickle.load(f)
-        f.close()
+        cls.LEX = Util.loadElementaryLexicon()
+        cls.PREDLEX = Util.loadPredictionLexicon()
         cls.ich = None
         cls.liebe = None
         cls.pred = None
@@ -49,27 +45,27 @@ class PLTAGTreeTest(unittest.TestCase):
         self.p.ich = self.p.LEX['Ich'][0][1]
         self.p.liebe = self.p.LEX['liebe'][4][1].clone()
         self.p.liebe[0].substitution(self.p.ich)
-        self.p.liebe.draw()    
+        #self.p.liebe.draw()    
     
     def test_02_PredictionSubstitution(self):
         self.p.pred = self.p.PREDLEX[8101][1].clone()
         self.p.liebe[1][1].substitution(self.p.pred, True)
-        self.p.liebe.draw()    
+        #self.p.liebe.draw()    
     
     def test_03_Substitution(self):
         self.p.dieses = self.p.LEX['dieses'][1][1].clone()
         self.p.liebe[1][1][0].substitution(self.p.dieses)
-        self.p.liebe.draw()    
+        #self.p.liebe.draw()    
     
     def test_04_Verify(self):
         self.p.land = self.p.LEX['Land'][10][1].clone()
         self.assertTrue(self.p.liebe.verify(self.p.land))
-        self.p.liebe.draw()    
+        #self.p.liebe.draw()    
     
     def test_05_Adjunction(self):
         self.p.sehr = self.p.LEX['sehr'][33][1].clone()
         self.p.liebe[1].adjunction(self.p.sehr)
-        self.p.liebe.draw()    
+        #self.p.liebe.draw()    
         
     def test_06_Adjunction(self):
         self.p.fullstop = self.p.LEX['.'][24][1].clone()
