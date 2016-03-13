@@ -41,7 +41,7 @@ class Util(object):
         return result
     
     @staticmethod
-    def loadElementaryLexicon():
+    def loadElementaryLexicon(): # TODO : implement error catch if class got changed for recompile
         return Util._loadLexicon("../res/pickeledTAGlexicon.pick", 'rb')
     
     @staticmethod

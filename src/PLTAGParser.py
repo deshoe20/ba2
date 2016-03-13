@@ -7,6 +7,8 @@ from nltk.tokenize import sent_tokenize, word_tokenize
 from Util import Util
 import logging
 import timeit
+from queue import Queue
+from PrefixTreeScanParser import PrefixTreeScanParser
 
 
 class PLTAGParser(object):
@@ -50,16 +52,27 @@ class PLTAGParser(object):
             elif prefixTrees is None:
                 prefixTrees = eTs
             else:
+                newPrefixTrees = []
                 for pT in prefixTrees:
-                    self.tryTntegrateTrees(pT, eTs)
+                    newPrefixTrees = self.tryTntegrateTrees(pT, eTs)
+                if len(newPrefixTrees) > 0:
+                    prefixTrees = newPrefixTrees
             #PrefixTreeScanParser.parse(result, newWord)
         logging.info("Parsed sentence {} in {} seconds".format(
             sentence, str(timeit.default_timer() - t1)))
         return result
 
     def tryTntegrateTrees(self, prefixTree, canonicalTrees):
+        """
+        integrate
+        if none remove
+        """
         result = None
+        scanThreads = []
+        newPrefixTrees = Queue()
         for cT in canonicalTrees:
             logging.debug("Trying to add tree {} with {} rating and current fringe {} to current prefix tree with current fringe: {}".format(
                 str(cT[1]), cT[0], str(cT[1].getCurrentFringe()), str(prefixTree[1].getCurrentFringe())))
+            scanThreads.append(PrefixTreeScanParser(prefixTree[1], cT[1], newPrefixTrees)) # TODO : fixme
+            scanThreads[-1].start()
         return result

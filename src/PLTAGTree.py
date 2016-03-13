@@ -28,7 +28,7 @@ class PLTAGTree(tree.Tree):
     Copyright (C) 2001-2015 NLTK Project
     Author: Edward Loper <edloper@gmail.com>
             Steven Bird <stevenbird1@gmail.com>
-            Peter LjunglÃ¶f <peter.ljunglof@gu.se>
+            Peter Ljunglöf <peter.ljunglof@gu.se>
             Nathan Bodenstab <bodenstab@cslu.ogi.edu> (tree transforms)
     URL: <http://nltk.org/>
     Its redistributed and modified here under its license (http://www.apache.org/licenses/LICENSE-2.0) by Benjamin Kosmehl
@@ -42,7 +42,7 @@ class PLTAGTree(tree.Tree):
     As its a list of trees and a tree in itself. Inherited from its superclass it consists basically of a list with a label.
     THe PLTAG trees have in addition to that its subsequent methods of the grammar and additional feature data.
 
-    TodoNotes:
+    ToDoNotes:
     remove str catch in loops and therefore override draw
     solve the reflexive changes problem through appropriate cloning 
     too much documentation
@@ -73,9 +73,9 @@ class PLTAGTree(tree.Tree):
       (8) the second group for the lower marking between the underscore and some whitespace - it has the same possible values as above:  'null', 'null!', 'null*', a digit or 'x'
       (10) the second to last group is anything before the '<>' lexical leaf marking - the lexical payload as such - if any: i.e. 'liebe', '1493' or '20-Milliarden-Mark-Defizits'
       (11) the last group is a possible minus sign in case of a trace if any: i.e. '-'
-    Please note that all codes (like 'NP', 'HD' or 'VVFIN') are a compilation from GOLD tags and those of the TIGER treebank: 
+    Please note that all phrasal/functional codes (like 'NP', 'HD' or 'VVFIN') are a compilation from GOLD tags and those of the TIGER treebank: 
     (http://www.ims.uni-stuttgart.de/forschung/ressourcen/lexika/TagSets/stts-table.html)
-    For further in depth information please refer to Kaeshammer (2012) mentioned above
+    For further in-depth information please refer to Kaeshammer (2012) mentioned above.
     """
 
     def __init__(self, treeString, children=None):
@@ -263,9 +263,7 @@ class PLTAGTree(tree.Tree):
 
     def findCorrespondence(self, other, marker):
         """
-        Kill Me With Fire
-        
-        Well thats a method.
+        A method.
         
         The overall functional aim of the this methods is to verify a predicted structure through a new word and adding this words structure.
         
