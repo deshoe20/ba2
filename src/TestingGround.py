@@ -8,6 +8,7 @@ from PLTAGTree import PLTAGTree
 from PredictionLexicon import PredictionLexicon
 from ElementaryLexicon import ElementaryLexicon
 from nltk import tree
+from Util import Util
 
 #1    lassen    ADJ    (VP-HD^null_x (VP-HD^x_null* )(VP-*T2*-RE^x_x (PP-*T1*-OP^x_null! )(VP-HD^x_x (NP-OA[acc]^x_null! )(VP-HD^x_x (VP-OC^x_null! )(VP-HD^x_x (VZ-HD^x_x (PTKZU-PM^x_null! )(VZ-HD^x_x (VVINF-HD^x_x lassen<>))))))))
 
@@ -22,8 +23,7 @@ regular expression splitting the lexicon file lines into four groups
 """
 LINEPATTERN = re.compile('^([0-9]+)\s+(\S+)\s+(\w{3})\s+(\(.+\))\s*$', re.UNICODE)
 TREESTRINGPATTERN = re.compile('^\(.+\)$', re.UNICODE)
-BO = '('
-BC = ')'
+
 
 #TODO : move this into PLTAGTree class if possible (simpler attribute allocation)
 def getTree(s, treecls):
@@ -38,17 +38,17 @@ def getTree(s, treecls):
         while (i < len(s)):
             c = s[i]
             if isopen:
-                if c == BO:
+                if c == Util.BO:
                     t = t if t else treecls(r, [])
                     t.extend(getInnerTrees(s))
-                    i = i + (s.find(BC, i) - i)
-                elif c == BC:
+                    i = i + (s.find(Util.BC, i) - i)
+                elif c == Util.BC:
                     t = t if t else treecls(r, [])
                     result.append(t)
                     break
                 else:
                     r += c  
-            elif c == BO:
+            elif c == Util.BO:
                 isopen = True 
             i += 1 
         return result
@@ -100,8 +100,12 @@ def loadLexicon(filename):
     return lex
             
 def main():
+    """
+    11033
+    89174
+    """
     logger = logging.getLogger()
-    logger.setLevel(logging.INFO)
+    logger.setLevel(logging.DEBUG)
     
     #convert
     LEX = convertTAGLexiconToPython(PredictionLexicon, '../res/freq-parser-lexicon-prediction.txt')

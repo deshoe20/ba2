@@ -27,7 +27,7 @@ class PLTAGParser(object):
 
     def parseText(self, text):
         result = []
-        sentences = sent_tokenize(text, Util.getLang())
+        sentences = sent_tokenize(text, Util.getConfigEntry()['language'])
         for sent in sentences:
             result.append(self.parseSentence(sent))
         return result
@@ -35,14 +35,14 @@ class PLTAGParser(object):
     def parseSentence(self, sentence):
         t1 = timeit.default_timer()
         result = None
-        tokens = word_tokenize(sentence, Util.getLang())
+        tokens = word_tokenize(sentence, Util.getConfigEntry()['language'])
         logging.debug("Sentence: {}\t{} tokens found: {}".format(
             sentence, len(tokens), str(tokens)))
         #self.cache.add(Util.uid(), tokens)
         prefixTrees = None
         for i in range(len(tokens)):
             newWord = tokens[i]
-            eTs = self.LEX[newWord]  # list of(frequency, elementaryTree)
+            eTs = self.LEX[newWord]  # list of tuple(frequency, elementaryTree)
             logging.debug(
                 "Found {} elementary trees for word \"{}\"".format(len(eTs), newWord))
             if len(eTs) == 0:
@@ -54,9 +54,11 @@ class PLTAGParser(object):
             else:
                 newPrefixTrees = []
                 for pT in prefixTrees:
-                    newPrefixTrees = self.tryTntegrateTrees(pT, eTs)
+                    newPrefixTrees.extend(self.tryTntegrateTrees(pT, eTs))
                 if len(newPrefixTrees) > 0:
                     prefixTrees = newPrefixTrees
+                else:
+                    logging.error("Failed to find any compatible tree to integrate {}".format(newWord))
             #PrefixTreeScanParser.parse(result, newWord)
         logging.info("Parsed sentence {} in {} seconds".format(
             sentence, str(timeit.default_timer() - t1)))
@@ -67,12 +69,13 @@ class PLTAGParser(object):
         integrate
         if none remove
         """
-        result = None
+        result = Queue()
         scanThreads = []
-        newPrefixTrees = Queue()
         for cT in canonicalTrees:
             logging.debug("Trying to add tree {} with {} rating and current fringe {} to current prefix tree with current fringe: {}".format(
                 str(cT[1]), cT[0], str(cT[1].getCurrentFringe()), str(prefixTree[1].getCurrentFringe())))
-            scanThreads.append(PrefixTreeScanParser(prefixTree[1], cT[1], newPrefixTrees)) # TODO : fixme
+            scanThreads.append(PrefixTreeScanParser(prefixTree[1], cT[1], result))
             scanThreads[-1].start()
+        for t in scanThreads:
+            t.join()
         return result

@@ -129,3 +129,10 @@ class NodeType(Enum):
     def __str__(self):
         return "!" if self == NodeType.SUBST else "*" if self == NodeType.FOOT else ""
     
+class ConfigType(Enum):
+    DEFAULT = 1
+    EXTENDED = 2
+    
+    def __str__(self):
+        return str(self.name)
+    

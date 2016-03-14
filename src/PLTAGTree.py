@@ -48,14 +48,6 @@ class PLTAGTree(tree.Tree):
     too much documentation
     """
 
-    # morphological information i.e. nom (->nominative), gen (->genitive), acc
-    # (->accusative) or dat (->dative)
-    morph = MorphCase.UNDEF
-    nodeType = NodeType.UNDEF  # current status of the node
-    upperNodeHalf = None # prediction or node status marking for the upper half of the current node
-    lowerNodeHalf = None # prediction or node status marking for the lower half of the current node
-    isCurrentRoot = False # the root node has no further parent nodes above it
-
     THEONEPATTERN = re.compile('^([^\-]+)(\-([^\[\$]+)(\[([^\]\$]+)\])?(\$.*\$)?)?\^([^_]+)_([\S]+)(\s+(.+)<>)?(\s+-)?\s*$', re.UNICODE)
     """
     THEONEPATTERN: parses tree data strings for one single tree node
@@ -78,30 +70,45 @@ class PLTAGTree(tree.Tree):
     For further in-depth information please refer to Kaeshammer (2012) mentioned above.
     """
 
-    def __init__(self, treeString, children=None):
+    def __init__(self, nodeString, children=None):
         """
         Constructor
         
         Args:
-            treeString: string data for the tree to be constructed out of (i.e. 'VVPP-HD^x_x abgeklärt<>')
+            nodeString: string data for the tree to be constructed out of (i.e. 'VVPP-HD^x_x abgeklärt<>')
             children: list of trees to be appended to self
         
         Returns:
             self
         """
-        if isinstance(treeString, str):
+        #(VP-HD^null_x (VP-HD^x_null* )(VP-*T2*-RE^x_x (PP-*T1*-OP^x_null! )(VP-HD^x_x (NP-OA[acc]^x_null! )(VP-HD^x_x (VP-OC^x_null! )(VP-HD^x_x (VZ-HD^x_x (PTKZU-PM^x_null! )(VZ-HD^x_x (VVINF-HD^x_x lassen<>))))))))
+        if isinstance(nodeString, str):
             # get phrasal category and set it as label for this tree
-            m = self.__class__.THEONEPATTERN.match(treeString)
+            m = self.__class__.THEONEPATTERN.match(nodeString)
             if m:
                 super().__init__(m.group(1), children)
+
             else:
                 logging.error(
-                    "Failed to extract valid tree from string: %s" % treeString)
+                    "Failed to extract valid tree from string: %s" % nodeString)
                 #raise RuntimeError("No valid category found for %s" % s)
                 return
+            self.init()
             self.process(m)
         else:
-            super().__init__(treeString, children)
+            super().__init__(nodeString, children)
+
+    def init(self):
+        """
+        Initialize instance fields.
+        """
+        # morphological information i.e. nom (->nominative), gen (->genitive), acc
+        # (->accusative) or dat (->dative)
+        self.morph = MorphCase.UNDEF
+        self.nodeType = NodeType.UNDEF  # current status of the node
+        self.isCurrentRoot = False # the root node has no further parent nodes above it
+        self.upperNodeHalf = None # prediction or node status marking for the upper half of the current node
+        self.lowerNodeHalf = None # prediction or node status marking for the lower half of the current node
 
     def process(self, match):
         """
