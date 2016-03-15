@@ -4,6 +4,10 @@ Created on 11.01.2016
 
 @author: Albert
 """
+import sys
+from os.path import dirname, abspath, join
+sys.path.append(join(dirname(dirname(abspath(__file__))), 'res'))
+
 import re, logging, pickle
 from PLTAGTree import PLTAGTree
 from PredictionLexicon import PredictionLexicon

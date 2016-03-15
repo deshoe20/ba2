@@ -4,6 +4,12 @@ Created on 27.02.2016
 
 @author: Albert
 """
+import sys
+from os.path import dirname, abspath, join
+
+sys.path.append(join(dirname(dirname(abspath(__file__))), 'src'))
+sys.path.append(join(dirname(dirname(abspath(__file__))), 'res'))
+
 import unittest
 from Util import Util
 
