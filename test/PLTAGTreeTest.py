@@ -27,8 +27,8 @@ class PLTAGTreeTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         unittest.TestCase.setUp(cls)
-        cls.LEX = Util.loadElementaryLexicon()
-        cls.PREDLEX = Util.loadPredictionLexicon()
+        cls.LEX = Util.loadElementaryLexicon(True)
+        cls.PREDLEX = Util.loadPredictionLexicon(True)
         cls.ich = None
         cls.liebe = None
         cls.pred = None

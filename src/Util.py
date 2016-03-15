@@ -12,13 +12,15 @@ import inspect
 import PLTAGTree
 import ElementaryLexicon
 import logging
+import TAGLexiconReader
+import PredictionLexicon
 
 class Util(object):
     """
     classdocs
     """
     profileT = ConfigType.DEFAULT
-    profile = None
+    config = None
     tlexicon = None
     plexicon = None
     BO = '('
@@ -35,28 +37,45 @@ class Util(object):
         result = Util.i
         Util.i += 1 
         return result;
-    
+        
     @staticmethod
-    def objMatch(cls, s):
-        return getattr(cls, s.upper(), None)
-    
-    @staticmethod
-    def loadElementaryLexicon():
-        lexPath = "../res/pickeledTAGlexicon.pick"
-        pltagTreeCls = inspect.getfile(PLTAGTree.PLTAGTree)
-        eleLexCls = inspect.getfile(ElementaryLexicon.ElementaryLexicon)
+    def _reloadIfChanged(r, lexPath, rawLexPath, treeCls, lexCls):
+        pltagTreeClsPath = inspect.getfile(treeCls)
+        eleLexClsPath = inspect.getfile(lexCls)
         tmpLex = path.getmtime(lexPath)
-        tmpPLTAGTree = path.getmtime(pltagTreeCls)
-        tmpEleLex = path.getmtime(eleLexCls)
+        tmpPLTAGTree = path.getmtime(pltagTreeClsPath)
+        tmpEleLex = path.getmtime(eleLexClsPath)
+        changed = False
         if tmpPLTAGTree > tmpLex:
-            logging.warn("PLTAGTree class file was recently changed and is newer than pickled lexicon version!")
+            logging.warn("{} class file was recently changed and is newer than pickled lexicon version!".format(treeCls.__name__))
+            changed = True
         if tmpEleLex > tmpLex:
-            logging.warn("ElementaryLexicon class file was recently changed and than pickled lexicon version!")         
-        return Util.loadLexicon(lexPath, 'rb')
+            logging.warn("{} class file was recently changed and than pickled lexicon version!".format(lexCls.__name__))     
+            changed = True
+        if changed and r:
+            logging.warn("Reloading {} - this may take a while ...".format(lexCls.__name__))
+            reader = TAGLexiconReader.TAGLexiconReader(lexCls, treeCls)
+            reader.convertTAGLexiconToPython(rawLexPath)
+            reader.pickleLexicon(lexPath)
+            logging.warn("... finished reloading {}".format(lexCls.__name__))
     
     @staticmethod
-    def loadPredictionLexicon():
-        return Util.loadLexicon("../res/pickeledTAGPredictionlexicon.pick", 'rb')
+    def loadElementaryLexicon(reloadIfChanged = False):        
+        rawLexPath = "../res/freq-parser-lexicon-tag.txt"
+        lexPath = "../res/pickeledTAGlexicon.pick"
+        pltagTreeCls = PLTAGTree.PLTAGTree
+        eleLexCls = ElementaryLexicon.ElementaryLexicon
+        Util._reloadIfChanged(reloadIfChanged, lexPath, rawLexPath, pltagTreeCls, eleLexCls)
+        return Util.loadLexicon(lexPath)
+    
+    @staticmethod
+    def loadPredictionLexicon(reloadIfChanged = False):        
+        rawLexPath = "../res/freq-parser-lexicon-prediction.txt"
+        lexPath = "../res/pickeledTAGPredictionlexicon.pick"
+        pltagTreeCls = PLTAGTree.PLTAGTree
+        eleLexCls = PredictionLexicon.PredictionLexicon
+        Util._reloadIfChanged(reloadIfChanged, lexPath, rawLexPath, pltagTreeCls, eleLexCls)
+        return Util.loadLexicon(lexPath)
     
     @staticmethod
     def loadLexicon(fileName):
@@ -72,12 +91,14 @@ class Util(object):
     
     @staticmethod
     def setConfigProfile(profileType):
-        Util.profile = profileType
+        Util.profileT = profileType
     
     @staticmethod
     def getConfigEntry(profileType = None):
-        if Util.profile is None:
-            Util.config = ConfigParser().read("../res/config.ini")[Util.profile if profileType is None else profileType]
+        if Util.config is None:
+            Util.config = ConfigParser()
+            Util.config.read("../res/config.ini")
+            Util.config = Util.config[str(Util.profileT if profileType is None else profileType)]
         return Util.config
         
     

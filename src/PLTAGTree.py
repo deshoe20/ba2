@@ -8,7 +8,7 @@ import re
 import logging
 from Enum import MorphCase, NodeType
 import copy
-from Util import Util
+import Util
 from builtins import isinstance
 from TAGTreeUI import TAGTreeUI
 
@@ -430,7 +430,7 @@ class PLTAGTree(tree.Tree):
         """
         markedRoot = False
         if marker is None:
-            marker = Util.uid()
+            marker = Util.Util.uid()
             markedRoot = True
         if not self.isLeaf():
             self.lowerNodeHalf = marker

@@ -16,11 +16,11 @@ class PrefixTreeScanParser(Thread):
         """
         Constructor
         """
-        super().__init__(self)
+        super().__init__()
         self.prefixTree = prefixTree
         self.elementaryTree = elementaryTree
         self.result = result
-        self.predictionDepth = Util.getConfigEntry()['predictionDepth']
+        self.predictionDepth = int(Util.getConfigEntry()['predictionDepth'])
         
     def run(self):
         # if none try prediction and again

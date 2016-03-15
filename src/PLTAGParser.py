@@ -69,13 +69,16 @@ class PLTAGParser(object):
         integrate
         if none remove
         """
-        result = Queue()
+        results = Queue()
         scanThreads = []
+        result = []
         for cT in canonicalTrees:
             logging.debug("Trying to add tree {} with {} rating and current fringe {} to current prefix tree with current fringe: {}".format(
                 str(cT[1]), cT[0], str(cT[1].getCurrentFringe()), str(prefixTree[1].getCurrentFringe())))
-            scanThreads.append(PrefixTreeScanParser(prefixTree[1], cT[1], result))
+            scanThreads.append(PrefixTreeScanParser(prefixTree[1], cT[1], results))
             scanThreads[-1].start()
         for t in scanThreads:
             t.join()
+        while(not results.empty()):
+            result.append(results.get())
         return result
