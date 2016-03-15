@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Created on 04.01.2016
 
@@ -42,16 +43,21 @@ class Util(object):
     def _reloadIfChanged(r, lexPath, rawLexPath, treeCls, lexCls):
         pltagTreeClsPath = inspect.getfile(treeCls)
         eleLexClsPath = inspect.getfile(lexCls)
-        tmpLex = path.getmtime(lexPath)
-        tmpPLTAGTree = path.getmtime(pltagTreeClsPath)
-        tmpEleLex = path.getmtime(eleLexClsPath)
-        changed = False
-        if tmpPLTAGTree > tmpLex:
-            logging.warn("{} class file was recently changed and is newer than pickled lexicon version!".format(treeCls.__name__))
+        if (path.isfile(lexPath)):
+            tmpLex = path.getmtime(lexPath)
+            tmpPLTAGTree = path.getmtime(pltagTreeClsPath)
+            tmpEleLex = path.getmtime(eleLexClsPath)
+            changed = False
+            if tmpPLTAGTree > tmpLex:
+                logging.warn("{} class file was recently changed and is newer than pickled lexicon version!".format(treeCls.__name__))
+                changed = True
+            if tmpEleLex > tmpLex:
+                logging.warn("{} class file was recently changed and than pickled lexicon version!".format(lexCls.__name__))     
+                changed = True
+        else: # no lexicon compiled yet
+            logging.warn("Pickled lexicon not found!")
             changed = True
-        if tmpEleLex > tmpLex:
-            logging.warn("{} class file was recently changed and than pickled lexicon version!".format(lexCls.__name__))     
-            changed = True
+            r = True
         if changed and r:
             logging.warn("Reloading {} - this may take a while ...".format(lexCls.__name__))
             reader = TAGLexiconReader.TAGLexiconReader(lexCls, treeCls)
