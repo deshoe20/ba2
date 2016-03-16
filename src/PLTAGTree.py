@@ -7,7 +7,7 @@ Created on 04.01.2016
 from nltk import tree
 import re
 import logging
-from Enum import MorphCase, NodeType
+from Enum import MorphCase, NodeType, ElementaryTreeType
 import copy
 import Util
 from builtins import isinstance
@@ -108,8 +108,16 @@ class PLTAGTree(tree.Tree):
         self.morph = MorphCase.UNDEF
         self.nodeType = NodeType.UNDEF  # current status of the node
         self.isCurrentRoot = False # the root node has no further parent nodes above it
+        self.treeType = None # tree type for substitution node
         self.upperNodeHalf = None # prediction or node status marking for the upper half of the current node
         self.lowerNodeHalf = None # prediction or node status marking for the lower half of the current node
+        self.currrentFringe = None # precompute current fringe for faster integration parsing
+        
+    def reset(self):
+        """
+        Reset root node fields after integration.
+        """
+        self.currrentFringe = self.getCurrentFringe()
 
     def process(self, match):
         """
@@ -170,7 +178,7 @@ class PLTAGTree(tree.Tree):
             n.extend(c)
             n.nodeType = NodeType.INNER  # TODO : hug erm debug me
         else:
-            logging.warn(
+            logging.warning(
                 "Can't adjoin on tree node with type: %s" % self.nodeType)
 
     def _fetchAdjunctionFoot(self, root=None):
@@ -219,7 +227,7 @@ class PLTAGTree(tree.Tree):
                 # successful and at least one child was added.
                 self.nodeType = NodeType.INNER
         else:
-            logging.warn(
+            logging.warning(
                 "Can't substitute on tree node with type: %s" % self.nodeType)
 
     def findFirstMarker(self, other=None, exclude=[]):
@@ -483,7 +491,7 @@ class PLTAGTree(tree.Tree):
         """
         return not (isinstance(self.upperNodeHalf, int) or isinstance(self.lowerNodeHalf, int))
 
-    def getCurrentFringe(self):
+    def getCurrentFringe(self, forceNew = False):
         """
         Computes the fringe starting at the rightmost lexical leaf to either the next non lexical leaf or the root node.
         Searches for conditions met in the reversed list of all fringes of the self tree.
@@ -491,17 +499,19 @@ class PLTAGTree(tree.Tree):
         Returns:
             list of PLTAGTree nodes
         """
-        i = 0
-        v = 0
-        fs = self.getFringes()
-        for ci in range(len(fs) - 1, -1, -1):
-            if (fs[ci][0].isCurrentRoot and fs[ci][1]) or (fs[ci][0].isLeaf() and not fs[ci][0].isLexicalLeaf() and not fs[ci][1]):
-                v = ci
-            # TODO : implement has no markers
-            if fs[ci][0].isLexicalLeaf and fs[ci][1]:
-                i = ci
-                break
-        return [x[0] for x in fs[i:v + 1]]
+        if forceNew or self.currrentFringe is None:
+            i = 0
+            v = 0
+            fs = self.getFringes()
+            for ci in range(len(fs) - 1, -1, -1):
+                if (fs[ci][0].isCurrentRoot and fs[ci][1]) or (fs[ci][0].isLeaf() and not fs[ci][0].isLexicalLeaf() and not fs[ci][1]):
+                    v = ci
+                # TODO : implement has no markers
+                if fs[ci][0].isLexicalLeaf() and fs[ci][1]:
+                    i = ci
+                    break
+            self.currrentFringe = [x[0] for x in fs[i:v + 1]]
+        return self.currrentFringe
 
     def getFringes(self):
         result = [(self, False)]
@@ -520,6 +530,11 @@ class PLTAGTree(tree.Tree):
             deep copy of self
         """
         return copy.deepcopy(self)
+    
+    def setAsCurrentRoot(self, treeType = ElementaryTreeType.ARG):
+        self.treeType = treeType
+        self.isCurrentRoot = True
+        self.currrentFringe = self.getCurrentFringe()
 
     def getSpine(self):  # TODO : implement me
         result = []

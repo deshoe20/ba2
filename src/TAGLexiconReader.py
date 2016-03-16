@@ -64,7 +64,7 @@ class TAGLexiconReader(object):
                     if len(t) > 1:
                         logging.error("Lexicon tree entry has more than 1 root node: %s\nFor line [%s]" % (str(t), l))
                     else:
-                        t[0].isCurrentRoot = True
+                        t[0].setAsCurrentRoot(m.group(3))
                         lex.compatibleAppending(m.group(2), (m.group(1), t[0]))
                 else:
                     logging.warning("getTree returned empty for: %s" % ts)

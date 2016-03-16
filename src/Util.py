@@ -49,21 +49,21 @@ class Util(object):
             tmpEleLex = path.getmtime(eleLexClsPath)
             changed = False
             if tmpPLTAGTree > tmpLex:
-                logging.warn("{} class file was recently changed and is newer than pickled lexicon version!".format(treeCls.__name__))
+                logging.warning("{} class file was recently changed and is newer than pickled lexicon version!".format(treeCls.__name__))
                 changed = True
             if tmpEleLex > tmpLex:
-                logging.warn("{} class file was recently changed and than pickled lexicon version!".format(lexCls.__name__))     
+                logging.warning("{} class file was recently changed and than pickled lexicon version!".format(lexCls.__name__))     
                 changed = True
         else: # no lexicon compiled yet
-            logging.warn("Pickled lexicon not found!")
+            logging.warning("Pickled lexicon not found!")
             changed = True
             r = True
         if changed and r:
-            logging.warn("Reloading {} - this may take a while ...".format(lexCls.__name__))
+            logging.warning("Reloading {} - this may take a while ...".format(lexCls.__name__))
             reader = TAGLexiconReader.TAGLexiconReader(lexCls, treeCls)
             reader.convertTAGLexiconToPython(rawLexPath)
             reader.pickleLexicon(lexPath)
-            logging.warn("... finished reloading {}".format(lexCls.__name__))
+            logging.warning("... finished reloading {}".format(lexCls.__name__))
     
     @staticmethod
     def loadElementaryLexicon(reloadIfChanged = False):        

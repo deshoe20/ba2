@@ -10,6 +10,7 @@ import logging
 import timeit
 from queue import Queue
 from PrefixTreeScanParser import PrefixTreeScanParser
+from Enum import NodeType
 
 
 class PLTAGParser(object):
@@ -21,9 +22,9 @@ class PLTAGParser(object):
         """
         Constructor
         """
-        self.LEX = Util.loadElementaryLexicon()
+        self.LEX = Util.loadElementaryLexicon(True)
         self.LEX.sortMe()
-        self.PRED = Util.loadPredictionLexicon()
+        self.PRED = Util.loadPredictionLexicon(True)
         self.parseText(text)
 
     def parseText(self, text):
@@ -47,7 +48,7 @@ class PLTAGParser(object):
             logging.debug(
                 "Found {} elementary trees for word \"{}\"".format(len(eTs), newWord))
             if len(eTs) == 0:
-                logging.warn(
+                logging.warning(
                     "Cannot find any elementary tree for: %s" % newWord)
                 break  # TODO : use default
             elif prefixTrees is None:
@@ -76,8 +77,16 @@ class PLTAGParser(object):
         for cT in canonicalTrees:
             logging.debug("Trying to add tree {} with {} rating and current fringe {} to current prefix tree with current fringe: {}".format(
                 str(cT[1]), cT[0], str(cT[1].getCurrentFringe()), str(prefixTree[1].getCurrentFringe())))
-            scanThreads.append(PrefixTreeScanParser(prefixTree[1], cT[1], results))
-            scanThreads[-1].start()
+            #scanThreads.append(PrefixTreeScanParser(prefixTree[1], cT[1], results))
+            #scanThreads[-1].start()
+            for i in cT[1].getCurrentFringe():
+                n = i
+                if n.nodeType == NodeType.SUBST:
+                    if n.match(prefixTree[1]):
+                        newN = n.clone()
+                        newN.substitution(prefixTree[1])
+                        result.put(newN)
+                        logging.debug("Integrated {} with {} via substitution".format(str(cT[1]), str(prefixTree[1])))
         for t in scanThreads:
             t.join()
         while(not results.empty()):
