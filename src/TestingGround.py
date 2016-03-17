@@ -42,7 +42,10 @@ def main():
     logging.info("Length of lexicon: %d" % len(LEX))
 #    LEX[10449][1].draw()
     cf = LEX['liebe'][4][1].getCurrentFringe(True)
+    cf2 = LEX['liebe'][4][1].getFringes()
     print("Current fringe:\t%s" % str(cf))
+    for n in cf2:
+        print("Fringe:\t%s" % str(n))
     LEX['liebe'][4][1].draw()
 #    cf[2].set_label("HANT")
 #    LEX['Amaru'][0][1].draw()

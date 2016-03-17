@@ -79,14 +79,26 @@ class PLTAGParser(object):
                 str(cT[1]), cT[0], str(cT[1].getCurrentFringe()), str(prefixTree[1].getCurrentFringe())))
             #scanThreads.append(PrefixTreeScanParser(prefixTree[1], cT[1], results))
             #scanThreads[-1].start()
-            for i in cT[1].getCurrentFringe():
-                n = i
+            '''
+            ___________THREAD : MOVEME____________
+            '''
+            temp = cT[1].clone()
+            foundOne = None
+            for n in temp.getCurrentFringe():
                 if n.nodeType == NodeType.SUBST:
-                    if n.match(prefixTree[1]):
-                        newN = n.clone()
-                        newN.substitution(prefixTree[1])
-                        result.put(newN)
-                        logging.debug("Integrated {} with {} via substitution".format(str(cT[1]), str(prefixTree[1])))
+                    if n.match(prefixTree[1], True):
+                        foundOne = n # can there be more than one?
+                        break
+            if foundOne is not None:
+                foundOne.substitution(prefixTree[1])
+                temp.reset()
+                results.put(temp)
+                logging.debug("Integrated {} with {} via substitution: {}".format(str(cT[1]), str(prefixTree[1]), str(temp)))
+            else:
+                del temp # TODO : check if necessary
+            '''
+            ___________THREAD : MOVEME____________
+            '''
         for t in scanThreads:
             t.join()
         while(not results.empty()):

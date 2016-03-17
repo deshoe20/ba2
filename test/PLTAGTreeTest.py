@@ -80,7 +80,10 @@ class PLTAGTreeTest(unittest.TestCase):
         self.p.fullstop.draw()    
         
     def test_07_Clone(self):
-        pass
+        c = self.p.ich.clone()
+        self.assertTrue(c.matches(self.p.ich))
+        self.assertNotEqual(id(c), id(self.p.ich))
+        self.assertNotEqual(id(c[0]), id(self.p.ich[0]))
 
 if __name__ == "__main__":
     unittest.main(sortTestMethodsUsing=False, failfast=True)

@@ -7,7 +7,7 @@ Created on 04.01.2016
 from nltk import tree
 import re
 import logging
-from Enum import MorphCase, NodeType, ElementaryTreeType
+from Enum import MorphCase, NodeType, ElementaryTreeType, FunctionalCategory
 import copy
 import Util
 from builtins import isinstance
@@ -112,12 +112,13 @@ class PLTAGTree(tree.Tree):
         self.upperNodeHalf = None # prediction or node status marking for the upper half of the current node
         self.lowerNodeHalf = None # prediction or node status marking for the lower half of the current node
         self.currrentFringe = None # precompute current fringe for faster integration parsing
+        self.functionalCategory = None # functional category of the node
         
     def reset(self):
         """
         Reset root node fields after integration.
         """
-        self.currrentFringe = self.getCurrentFringe()
+        self.currrentFringe = None
 
     def process(self, match):
         """
@@ -126,15 +127,17 @@ class PLTAGTree(tree.Tree):
         Args:
             match: regex match of the one pattern against the given tree string
         """
-        # functionalCategory = match.group(3)  # TODO : REMOVE ME
+        functionalInfo = match.group(3)
         morphologicalInfo = match.group(5)
         upperNodeHalfMarker = match.group(7)
         lowerNodeHalfMarker = match.group(8)
         lexicalPayload = match.group(10)
         # try to get the optional morphological information in the tree string
-        # s
         if morphologicalInfo:
             self.morph = MorphCase.fromString(morphologicalInfo)
+        # try to get the optional morphological information in the tree string
+        if functionalInfo:
+            self.functionalCategory = FunctionalCategory.fromString(functionalInfo)
         # try to get and set upper node marker
         if upperNodeHalfMarker:
             self.upperNodeHalf = upperNodeHalfMarker
@@ -176,7 +179,7 @@ class PLTAGTree(tree.Tree):
             if (n.label().endswith("*")):
                 n.set_label(n.label()[:-1])
             n.extend(c)
-            n.nodeType = NodeType.INNER  # TODO : hug erm debug me
+            n.nodeType = NodeType.INNER
         else:
             logging.warning(
                 "Can't adjoin on tree node with type: %s" % self.nodeType)
@@ -306,7 +309,7 @@ class PLTAGTree(tree.Tree):
             and u1, ..., uk but not uk+1, ..., un match (upper) node halves in T(self) (i.e., upper node halves of children of h), 
             then the subtrees of T(other) below uk+1, ..., un are added to T(self) as the k + 1-st to n-th child of h.
         In addition to adding the non correlating nodes in T(other) to self all markers of the given marker are removed from self.
-        (maybe it does all that) # TODO : remove
+        (maybe it does all that)
         
         For further documentation about PLTAG correspondence please refer to Demberg, Keller and Koller (2013).
         
@@ -405,7 +408,7 @@ class PLTAGTree(tree.Tree):
             markers.append(marker)
         return result
 
-    def match(self, other, ignoreAffix=False):  # TODO : implement me
+    def match(self, other, ignoreAffix=False, ignoreMorphCase=False, ignoreFunctionalCategory=True):
         """
         Matches this tree node with a given other to check if they are similar enough to be considered equal.
         
@@ -417,12 +420,35 @@ class PLTAGTree(tree.Tree):
             True if self matches other with the given conditions
         """
         result = False
-        if (ignoreAffix):
-            trimmedSelfLabel = self.label()[:-1] if (self.label().endswith("!") or self.label().endswith("*")) else self.label()
-            trimmedOtherLabel = other.label()[:-1] if (other.label().endswith("!") or other.label().endswith("*")) else other.label()
-            result = (trimmedSelfLabel == trimmedOtherLabel)
-        else:
-            result = self.label() == other.label()
+        if ((self.morph == other.morph) or ignoreMorphCase) and ((self.functionalCategory == other.functionalCategory) or ignoreFunctionalCategory):
+            if (ignoreAffix):
+                trimmedSelfLabel = self.label()[:-1] if (self.label().endswith("!") or self.label().endswith("*")) else self.label()
+                trimmedOtherLabel = other.label()[:-1] if (other.label().endswith("!") or other.label().endswith("*")) else other.label()
+                result = (trimmedSelfLabel == trimmedOtherLabel)
+            else:
+                result = self.label() == other.label()
+        return result
+    
+    def matches(self, other, ignoreAffix=False, ignoreLexicalLeaves=False):
+        """
+        Matches this tree node with a given other to check if they are similar enough to be considered equal.
+        
+        Args:
+            other: the other PLTAG tree to be tried for a match
+            ignoreAffix: optional whether or not a possible affix '!' or '*' regarding the node label should be ignored
+            
+        Returns:
+            True if self matches other with the given conditions
+            
+        """
+        result = (self.match(other, ignoreAffix) and len(self) == len(other)) or (ignoreLexicalLeaves and self.isLexicalLeaf())
+        if result:
+            for i in range(len(self)):
+                c = self[i]
+                if not isinstance(c, str):
+                    result = c.matches(other[i])
+                if not result:
+                    break
         return result
 
     def mark(self, marker=None):
@@ -475,8 +501,8 @@ class PLTAGTree(tree.Tree):
             result = False
         else:
             # its 05:30 a.m. and i got an error with string here - gn8
-            for c in self:
-                if not isinstance(c, str):
+            for c in self: # also this method is not well
+                if not isinstance(c, str): # maybe it should take a day off
                     result = c.hasNoMarkers()
                     if not result:
                         break
@@ -502,27 +528,40 @@ class PLTAGTree(tree.Tree):
         if forceNew or self.currrentFringe is None:
             i = 0
             v = 0
-            fs = self.getFringes()
+            fs = self.getNodeVisits()
             for ci in range(len(fs) - 1, -1, -1):
                 if (fs[ci][0].isCurrentRoot and fs[ci][1]) or (fs[ci][0].isLeaf() and not fs[ci][0].isLexicalLeaf() and not fs[ci][1]):
                     v = ci
-                # TODO : implement has no markers
-                if fs[ci][0].isLexicalLeaf() and fs[ci][1]:
+                if fs[ci][0].isLexicalLeaf() and fs[ci][1] and fs[ci][0].hasNoMarker():
                     i = ci
                     break
             self.currrentFringe = [x[0] for x in fs[i:v + 1]]
         return self.currrentFringe
-
+    
     def getFringes(self):
+        result = []
+        ns = self.getNodeVisits()
+        start = None
+        for i in range(len(ns)):
+            n = ns[i][0]
+            if n.isCurrentRoot or n.isLeaf():
+                if start is None:
+                    start = i
+                else:
+                    result.append(ns[start : (i + 1)])
+                    start = None
+        return result
+
+    def getNodeVisits(self):
         result = [(self, False)]
         for c in self:
             if type(c) is not PLTAGTree:
                 break  # the string of a lexicalLeaf
-            result.extend(c.getFringes())
+            result.extend(c.getNodeVisits())
         result.append((self, True))
         return result
 
-    def clone(self):  # TODO : testme
+    def clone(self):
         """
         Computes and returns an exact copy of new objects of self.
         
@@ -536,18 +575,14 @@ class PLTAGTree(tree.Tree):
         self.isCurrentRoot = True
         self.currrentFringe = self.getCurrentFringe()
 
-    def getSpine(self):  # TODO : implement me
-        result = []
-        return result
-
     def isEmpty(self):
         return not (self.isLexicalLeaf() or (len(self) > 0))
 
     def isLeaf(self):
-        return self.isEmpty()
+        return self.isLexicalLeaf() or self.isEmpty()
 
     def isLexicalLeaf(self):
-        return True if ((len(self) == 1) and isinstance(self[0], str)) else False
+        return (len(self) == 1) and isinstance(self[0], str)
 
     def draw(self):
         TAGTreeUI(self).mainloop()

@@ -95,6 +95,10 @@ class FunctionalCategory(Enum):
     def __str__(self):
         return str(self.name)
     
+    @classmethod
+    def fromString(cls, s):
+        return getattr(cls, s.upper(), FunctionalCategory.UNDEF)
+    
 class ElementaryTreeType(Enum):
     """
     classdocs
