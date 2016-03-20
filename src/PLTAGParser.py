@@ -50,7 +50,7 @@ class PLTAGParser(object):
             if len(eTs) == 0:
                 logging.warning(
                     "Cannot find any elementary tree for: %s" % newWord)
-                break  # TODO : use default
+                break  #TODO: use default
             elif prefixTrees is None:
                 prefixTrees = eTs
             else:
@@ -77,11 +77,11 @@ class PLTAGParser(object):
         for cT in canonicalTrees:
             logging.debug("Trying to add tree {} with {} rating and current fringe {} to current prefix tree with current fringe: {}".format(
                 str(cT[1]), cT[0], str(cT[1].getCurrentFringe()), str(prefixTree[1].getCurrentFringe())))
-            #scanThreads.append(PrefixTreeScanParser(prefixTree[1], cT[1], results))
-            #scanThreads[-1].start()
+            scanThreads.append(PrefixTreeScanParser(prefixTree[1], cT[1], results))
+            scanThreads[-1].start()
             '''
             ___________THREAD : MOVEME____________
-            '''
+            
             temp = cT[1].clone()
             foundOne = None
             for n in temp.getCurrentFringe():
@@ -95,8 +95,8 @@ class PLTAGParser(object):
                 results.put(temp)
                 logging.debug("Integrated {} with {} via substitution: {}".format(str(cT[1]), str(prefixTree[1]), str(temp)))
             else:
-                del temp # TODO : check if necessary
-            '''
+                del temp #TODO: check if necessary
+            
             ___________THREAD : MOVEME____________
             '''
         for t in scanThreads:

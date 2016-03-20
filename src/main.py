@@ -13,4 +13,4 @@ import logging
 
 if __name__ == '__main__':
     logging.getLogger().setLevel(logging.DEBUG)
-    parser = PLTAGParser("Ich liebe dieses Land sehr.") # log : 0.06s with wrongside substitution
+    parser = PLTAGParser("Ich liebe dieses Land sehr.") # log : 0.41s with only substitution - also malformed trees <-- fix with setting isCurrentRoot

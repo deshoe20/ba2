@@ -29,14 +29,28 @@ class PrefixTreeScanParser(Thread):
         # if none try prediction and again
         if (not self.prefixTree.isCurrentRoot) or (not self.elementaryTree.isCurrentRoot):
             logging.warn("WARNING - malformed tree detected!\n{}\n{}".format(str(self.prefixTree), str(self.elementaryTree)))
-        self.lookForSubstitution(self.prefixTree, self.elementaryTree)
-        self.lookForSubstitution(self.elementaryTree, self.prefixTree)
+        self.lookForDownSubstitution(self.prefixTree, self.elementaryTree)
+        self.lookForUpSubstitution(self.prefixTree, self.elementaryTree)
         
     def lookForDownSubstitution(self, t1, t2):
-        pass
+        temp = t1.clone()
+        for n in temp.getCurrentFringe():
+            if (n.nodeType == NodeType.SUBST) and n.match(t2, True):
+                n.substitution(t2)
+                temp.reset()
+                self.result.put(temp)
+                logging.debug("Integrated {} with {} via down substitution: {}".format(str(t1), str(t2), str(temp)))
+                break
                     
     def lookForUpSubstitution(self, t1, t2):
-        pass
+        temp = t2.clone()
+        for n in temp.getFringes():
+            for f in n:
+                if (f[0].nodeType == NodeType.SUBST) and f[0].match(t1, True):
+                    f[0].substitution(t1)
+                    temp.reset()
+                    self.result.put(temp)
+                    logging.debug("Integrated {} with {} via up substitution: {}".format(str(t2), str(t1), str(temp)))
     
     def lookForAdjunction(self):
         return False

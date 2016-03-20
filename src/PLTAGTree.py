@@ -111,14 +111,14 @@ class PLTAGTree(tree.Tree):
         self.treeType = None # tree type for substitution node
         self.upperNodeHalf = None # prediction or node status marking for the upper half of the current node
         self.lowerNodeHalf = None # prediction or node status marking for the lower half of the current node
-        self.currrentFringe = None # precompute current fringe for faster integration parsing
+        self._currrentFringe = None # precompute current fringe for faster integration parsing
         self.functionalCategory = None # functional category of the node
         
     def reset(self):
         """
         Reset root node fields after integration.
         """
-        self.currrentFringe = None
+        self._currrentFringe = None
 
     def process(self, match):
         """
@@ -415,6 +415,7 @@ class PLTAGTree(tree.Tree):
         Args:
             other: the other PLTAG tree node to be tried for a match
             ignoreAffix: optional whether or not a possible affix '!' or '*' regarding the node label should be ignored
+            ignoreFunctionalCategory: currently on ignore on default 
             
         Returns:
             True if self matches other with the given conditions
@@ -525,7 +526,7 @@ class PLTAGTree(tree.Tree):
         Returns:
             list of PLTAGTree nodes
         """
-        if forceNew or self.currrentFringe is None:
+        if forceNew or self._currrentFringe is None:
             i = 0
             v = 0
             fs = self.getNodeVisits()
@@ -535,8 +536,8 @@ class PLTAGTree(tree.Tree):
                 if fs[ci][0].isLexicalLeaf() and fs[ci][1] and fs[ci][0].hasNoMarker():
                     i = ci
                     break
-            self.currrentFringe = [x[0] for x in fs[i:v + 1]]
-        return self.currrentFringe
+            self._currrentFringe = [x[0] for x in fs[i:v + 1]]
+        return self._currrentFringe
     
     def getFringes(self):
         result = []
@@ -573,7 +574,7 @@ class PLTAGTree(tree.Tree):
     def setAsCurrentRoot(self, treeType = ElementaryTreeType.ARG):
         self.treeType = treeType
         self.isCurrentRoot = True
-        self.currrentFringe = self.getCurrentFringe()
+        self._currrentFringe = self.getCurrentFringe()
 
     def isEmpty(self):
         return not (self.isLexicalLeaf() or (len(self) > 0))
