@@ -13,4 +13,9 @@ import logging
 
 if __name__ == '__main__':
     logging.getLogger().setLevel(logging.DEBUG)
-    parser = PLTAGParser("Ich liebe dieses Land sehr.") # log : 0.41s with only substitution - also malformed trees <-- fix with setting isCurrentRoot
+    logging.basicConfig(filename='dev_a1.log', level=logging.DEBUG)
+    parser = PLTAGParser("Ich liebe dieses Land sehr.")
+    # log1 : 0.41s with only substitution - also malformed trees <-- fix with setting isCurrentRoot - nope asynchron
+    # log2 : 0.53s with substitution - now working
+    # log3 : 0.84s with substitution and adjunction up
+    # log4 : 29.22s with substitution and adjunction! -- implement Test and check specification - then implement prediction

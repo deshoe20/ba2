@@ -10,7 +10,7 @@ import logging
 import timeit
 from queue import Queue
 from PrefixTreeScanParser import PrefixTreeScanParser
-from Enum import NodeType
+import random
 
 
 class PLTAGParser(object):
@@ -44,13 +44,13 @@ class PLTAGParser(object):
         prefixTrees = None
         for i in range(len(tokens)):
             newWord = tokens[i]
-            eTs = self.LEX[newWord]  # list of tuple(frequency, elementaryTree)
+            eTs = [x[1] for x in self.LEX[newWord]]  # list of elementaryTree
             logging.debug(
                 "Found {} elementary trees for word \"{}\"".format(len(eTs), newWord))
             if len(eTs) == 0:
                 logging.warning(
                     "Cannot find any elementary tree for: %s" % newWord)
-                break  #TODO: use default
+                break  # TODO: use default
             elif prefixTrees is None:
                 prefixTrees = eTs
             else:
@@ -59,11 +59,15 @@ class PLTAGParser(object):
                     newPrefixTrees.extend(self.tryTntegrateTrees(pT, eTs))
                 if len(newPrefixTrees) > 0:
                     prefixTrees = newPrefixTrees
+                    logging.info(
+                        "New stack size (approximately): {}".format(len(prefixTrees)))
                 else:
-                    logging.error("Failed to find any compatible tree to integrate {}".format(newWord))
-            #PrefixTreeScanParser.parse(result, newWord)
+                    logging.error(
+                        "Failed to find any compatible tree to integrate {}".format(newWord))
         logging.info("Parsed sentence {} in {} seconds".format(
             sentence, str(timeit.default_timer() - t1)))
+        logging.debug("Three random parse elements:\n{}\n{}\n{}".format(str(prefixTrees[random.randint(0, len(prefixTrees))]), str(
+            prefixTrees[random.randint(0, len(prefixTrees))]), str(prefixTrees[random.randint(0, len(prefixTrees))])))
         return result
 
     def tryTntegrateTrees(self, prefixTree, canonicalTrees):
@@ -75,30 +79,10 @@ class PLTAGParser(object):
         scanThreads = []
         result = []
         for cT in canonicalTrees:
-            logging.debug("Trying to add tree {} with {} rating and current fringe {} to current prefix tree with current fringe: {}".format(
-                str(cT[1]), cT[0], str(cT[1].getCurrentFringe()), str(prefixTree[1].getCurrentFringe())))
-            scanThreads.append(PrefixTreeScanParser(prefixTree[1], cT[1], results))
+            logging.debug("Trying to add tree {} to current fringe {} on current prefix tree {}".format(
+                str(cT), str(prefixTree.getCurrentFringe()), str(prefixTree)))
+            scanThreads.append(PrefixTreeScanParser(prefixTree, cT, results))
             scanThreads[-1].start()
-            '''
-            ___________THREAD : MOVEME____________
-            
-            temp = cT[1].clone()
-            foundOne = None
-            for n in temp.getCurrentFringe():
-                if n.nodeType == NodeType.SUBST:
-                    if n.match(prefixTree[1], True):
-                        foundOne = n # can there be more than one?
-                        break
-            if foundOne is not None:
-                foundOne.substitution(prefixTree[1])
-                temp.reset()
-                results.put(temp)
-                logging.debug("Integrated {} with {} via substitution: {}".format(str(cT[1]), str(prefixTree[1]), str(temp)))
-            else:
-                del temp #TODO: check if necessary
-            
-            ___________THREAD : MOVEME____________
-            '''
         for t in scanThreads:
             t.join()
         while(not results.empty()):

@@ -144,10 +144,12 @@ class PLTAGTree(tree.Tree):
         # try to set node type and extend label with corresponding symbol -
         # only the lower node half marker can carry a type symbol
         if lowerNodeHalfMarker:
-            if lowerNodeHalfMarker.endswith('!'):
+            if lowerNodeHalfMarker.endswith(str(NodeType.SUBST)):
                 self.nodeType = NodeType.SUBST
-            elif lowerNodeHalfMarker.endswith('*'):
+            elif lowerNodeHalfMarker.endswith(str(NodeType.FOOT)):
                 self.nodeType = NodeType.FOOT
+            else:
+                self.nodeType = NodeType.INNER
             self.set_label(self.label() + str(self.nodeType))
         # try to determine and extract lexical leaf data
         if lexicalPayload:
@@ -161,7 +163,7 @@ class PLTAGTree(tree.Tree):
         Args:
             other: the tree to be adjoined onto self (should have a appropriate foot node)
         """
-        n = other._fetchAdjunctionFoot()
+        n = other.fetchAdjunctionFoot()
         if n is None:
             logging.error(
                 "Adjunction failed - could not find corresponding node in %s" % str(other))
@@ -180,11 +182,12 @@ class PLTAGTree(tree.Tree):
                 n.set_label(n.label()[:-1])
             n.extend(c)
             n.nodeType = NodeType.INNER
+            self.reset()
         else:
             logging.warning(
                 "Can't adjoin on tree node with type: %s" % self.nodeType)
 
-    def _fetchAdjunctionFoot(self, root=None):
+    def fetchAdjunctionFoot(self, root=None):
         """
         Utility method to recursively fetch the foot/leaf node that matches the calling trees root.
         Used in adjunction to append the lowered subtree.
@@ -203,7 +206,7 @@ class PLTAGTree(tree.Tree):
         else:
             for c in self:
                 if not isinstance(c, str):
-                    result = c._fetchAdjunctionFoot(root)
+                    result = c.fetchAdjunctionFoot(root)
                     if result is not None:
                         break
         return result
@@ -229,6 +232,7 @@ class PLTAGTree(tree.Tree):
                 # changes node type to NodeType.INNER if substitution was
                 # successful and at least one child was added.
                 self.nodeType = NodeType.INNER
+                self.reset()
         else:
             logging.warning(
                 "Can't substitute on tree node with type: %s" % self.nodeType)
@@ -406,6 +410,8 @@ class PLTAGTree(tree.Tree):
             marker = self.findFirstMarker(other, markers)
             result = self.findCorrespondence(other, marker)
             markers.append(marker)
+        else:
+            self.reset()
         return result
 
     def match(self, other, ignoreAffix=False, ignoreMorphCase=False, ignoreFunctionalCategory=True):

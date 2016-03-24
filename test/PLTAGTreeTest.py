@@ -49,7 +49,7 @@ class PLTAGTreeTest(unittest.TestCase):
         self.p = PLTAGTreeTest
     
     def test_01_Substitution(self):
-        self.p.ich = self.p.LEX['Ich'][0][1]
+        self.p.ich = self.p.LEX['Ich'][0][1].clone()
         self.p.liebe = self.p.LEX['liebe'][4][1].clone()
         self.p.liebe[0].substitution(self.p.ich)
         self.p.liebe.draw()    
