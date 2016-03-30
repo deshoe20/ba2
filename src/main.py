@@ -13,7 +13,7 @@ import logging
 
 if __name__ == '__main__':
     logging.getLogger().setLevel(logging.DEBUG)
-    logging.basicConfig(filename='dev_a1.log', level=logging.DEBUG)
+    logging.basicConfig(filename='../res/dev_a1.log', level=logging.DEBUG)
     parser = PLTAGParser("Ich liebe dieses Land sehr.")
     # log1 : 0.41s with only substitution - also malformed trees <-- fix with setting isCurrentRoot - nope asynchron
     # log2 : 0.53s with substitution - now working

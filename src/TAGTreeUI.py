@@ -12,11 +12,10 @@ Created on 08.03.2016
 
 from tkinter import IntVar, Menu, Tk
 from nltk.util import in_idle
-from nltk.draw.util import CanvasFrame
-from nltk.draw.tree import TreeWidget
+from nltk.draw.util import CanvasFrame, TextWidget
 
 from nltk.tree import Tree
-from nltk.draw.util import (CanvasWidget, TextWidget)
+from nltk.draw.util import CanvasWidget
 
 
 class TAGTreeUI(object):
@@ -128,6 +127,83 @@ class TAGTreeUI(object):
         """
         if in_idle(): return
         self._top.mainloop(*args, **kwargs)
+        
+
+class PLTAGTreeWidget(CanvasWidget):
+    """
+    A canvas widget that displays a single string of text.
+
+    Attributes:
+      - ``color``: the color of the text.
+      - ``font``: the font used to display the text.
+      - ``justify``: justification for multi-line texts.  Valid values
+        are ``left``, ``center``, and ``right``.
+      - ``width``: the width of the text.  If the text is wider than
+        this width, it will be line-wrapped at whitespace.
+      - ``draggable``: whether the text can be dragged by the user.
+    """
+    def __init__(self, canvas, tree, **attribs):
+        """
+        Create a new text widget.
+
+        :type canvas: Tkinter.Canvas
+        :param canvas: This canvas widget's canvas.
+        :type text: str
+        :param text: The string of text to display.
+        :param attribs: The new canvas widget's attributes.
+        """
+        self._text = tree.label()
+        self._tagx = [canvas.create_text(1, 1, text=tree.label())]
+        bounds = canvas.bbox(self._tagx[-1])  # returns a tuple like (x1, y1, x2, y2)
+        width = bounds[2] - bounds[0]
+        height = bounds[3] - bounds[1]
+        self._tagx.append(canvas.create_text(bounds[2] + 1, int(bounds[1] / 2) + bounds[1], text=str(tree.upperNodeHalf)))
+        self._tagx.append(canvas.create_text(bounds[2] + 1, int(bounds[1] / 2) - 1, text=str(tree.lowerNodeHalf)))
+        CanvasWidget.__init__(self, canvas, **attribs)
+
+    def __setitem__(self, attr, value):
+        if attr in ('color', 'font', 'justify', 'width'):
+            if attr == 'color': attr = 'fill'
+            for c in self._tagx:
+                self.canvas().itemconfig(c, {attr:value})
+        else:
+            CanvasWidget.__setitem__(self, attr, value)
+
+    def __getitem__(self, attr):
+        if attr == 'width':
+            result = 0
+            for c in self._tagx:
+                result = result + int(self.canvas().itemcget(c, attr))
+            return result
+        elif attr in ('color', 'font', 'justify'):
+            if attr == 'color': attr = 'fill'
+            return self.canvas().itemcget(self._tagx[-1], attr)
+        else:
+            return CanvasWidget.__getitem__(self, attr)
+
+    def _tags(self): return self._tagx
+
+    def text(self):
+        """
+        :return: The text displayed by this text widget.
+        :rtype: str
+        """
+        return self.canvas().itemcget(self._tag, 'TEXT')
+
+    def set_text(self, text):
+        """
+        Change the text that is displayed by this text widget.
+
+        :type text: str
+        :param text: The string of text to display.
+        :rtype: None
+        """
+        self.canvas().itemconfig(self._tag, text=text)
+        if self.parent() is not None:
+            self.parent().update(self)
+
+    def __repr__(self):
+        return '[Text: %r]' % self._text
         
 ##//////////////////////////////////////////////////////
 ##  Tree Segment
@@ -514,7 +590,7 @@ def _tree_to_treeseg(canvas, t, make_node, make_leaf,
     else:
         return make_leaf(canvas, t, **leaf_attribs)
 
-def tree_to_treesegment(canvas, t, make_node=TextWidget,
+def tree_to_treesegment(canvas, t, make_node=PLTAGTreeWidget,
                         make_leaf=TextWidget, **attribs):
     """
     Convert a Tree into a ``TreeSegmentWidget``.
@@ -596,7 +672,7 @@ class TreeWidget(CanvasWidget):
         segments.
       - ``draggable``: whether the widget can be dragged by the user.
     """
-    def __init__(self, canvas, t, make_node=TextWidget,
+    def __init__(self, canvas, t, make_node=PLTAGTreeWidget,
                  make_leaf=TextWidget, **attribs):
         # Node & leaf canvas widget constructors
         self._make_node = make_node
@@ -703,7 +779,7 @@ class TreeWidget(CanvasWidget):
         make_node = self._make_node
         make_leaf = self._make_leaf
 
-        node = make_node(canvas, t.label(), **self._nodeattribs)
+        node = make_node(canvas, t, **self._nodeattribs)
         self._nodes.append(node)
         leaves = [make_leaf(canvas, l, **self._leafattribs)
                   for l in t.leaves()]
@@ -728,7 +804,7 @@ class TreeWidget(CanvasWidget):
         make_leaf = self._make_leaf
 
         if isinstance(t, Tree):
-            node = make_node(canvas, t.label(), **self._nodeattribs)
+            node = make_node(canvas, t, **self._nodeattribs)
             self._nodes.append(node)
             children = t
             subtrees = [self._make_expanded_tree(canvas, children[i], key+(i,))
