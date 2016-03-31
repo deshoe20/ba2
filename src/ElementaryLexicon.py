@@ -20,7 +20,7 @@ class ElementaryLexicon(dict):
         for c in self.items():
             c[1].sort(key = lambda x: int(x[0]), reverse = True)    
         
-    def compatibleAppending(self, key , value):
+    def compatibleAppending(self, key, value):
         if key in self:
             self[key].append(value)
         else:

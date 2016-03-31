@@ -4,13 +4,13 @@ Created on 04.01.2016
 
 @author: Albert
 """
+from builtins import isinstance
 from nltk import tree
 import re
 import logging
 from Enum import MorphCase, NodeType, ElementaryTreeType, FunctionalCategory
 import copy
 import Util
-from builtins import isinstance
 from TAGTreeUI import TAGTreeUI
 
 
@@ -49,7 +49,7 @@ class PLTAGTree(tree.Tree):
     too much documentation
     """
 
-    THEONEPATTERN = re.compile('^([^\-]+)(\-([^\[\$]+)(\[([^\]\$]+)\])?(\$.*\$)?)?\^([^_]+)_([\S]+)(\s+(.+)<>)?(\s+-)?\s*$', re.UNICODE)
+    THEONEPATTERN = re.compile(r'^([^\-]+)(\-([^\[\$]+)(\[([^\]\$]+)\])?(\$.*\$)?)?\^([^_]+)_([\S]+)(\s+(.+)<>)?(\s+-)?\s*$', re.UNICODE)
     """
     THEONEPATTERN: parses tree data strings for one single tree node
     
@@ -90,16 +90,15 @@ class PLTAGTree(tree.Tree):
                 super().__init__(m.group(1), children)
 
             else:
-                logging.error(
-                    "Failed to extract valid tree from string: %s" % nodeString)
-                #raise RuntimeError("No valid category found for %s" % s)
+                logging.error("Failed to extract valid tree from string: %s", nodeString)
+                #raise RuntimeError("No valid category found for {}", s))
                 return
-            self.init()
+            self.initialize()
             self.process(m)
         else:
             super().__init__(nodeString, children)
 
-    def init(self):
+    def initialize(self):
         """
         Initialize instance fields.
         """
@@ -111,14 +110,14 @@ class PLTAGTree(tree.Tree):
         self.treeType = None # tree type for substitution node
         self.upperNodeHalf = None # prediction or node status marking for the upper half of the current node
         self.lowerNodeHalf = None # prediction or node status marking for the lower half of the current node
-        self._currrentFringe = None # precompute current fringe for faster integration parsing
+        self._currentFringe = None # precompute current fringe for faster integration parsing
         self.functionalCategory = None # functional category of the node
         
     def reset(self):
         """
         Reset root node fields after integration.
         """
-        self._currrentFringe = None
+        self._currentFringe = None
 
     def process(self, match):
         """
@@ -165,9 +164,8 @@ class PLTAGTree(tree.Tree):
         """
         n = other.fetchAdjunctionFoot()
         if n is None:
-            logging.error(
-                "Adjunction failed - could not find corresponding node in %s" % str(other))
-            #raise RuntimeError("Adjunction failed - could not find corresponding node in %s" % str(self))
+            logging.error("Adjunction failed - could not find corresponding node in %s", str(other))
+            #raise RuntimeError("Adjunction failed - could not find corresponding node in %s", str(self))
         elif n.nodeType is NodeType.FOOT:
             c = []
             if markAsPredicted:
@@ -178,14 +176,13 @@ class PLTAGTree(tree.Tree):
             self.clear()
             self.extend(other)
             self.nodeType = NodeType.INNER
-            if (n.label().endswith("*")):
+            if n.label().endswith("*"):
                 n.set_label(n.label()[:-1])
             n.extend(c)
             n.nodeType = NodeType.INNER
             self.reset()
         else:
-            logging.warning(
-                "Can't adjoin on tree node with type: %s" % self.nodeType)
+            logging.warning("Can't adjoin on tree node with type: %s", self.nodeType)
 
     def fetchAdjunctionFoot(self, root=None):
         """
@@ -234,8 +231,7 @@ class PLTAGTree(tree.Tree):
                 self.nodeType = NodeType.INNER
                 self.reset()
         else:
-            logging.warning(
-                "Can't substitute on tree node with type: %s" % self.nodeType)
+            logging.warning("Can't substitute on tree node with type: %s", self.nodeType)
 
     def findFirstMarker(self, other=None, exclude=[]):
         """
@@ -362,7 +358,7 @@ class PLTAGTree(tree.Tree):
                         i += 1 # and try against next node in T(other)
                 # verification tree mismatch
                 elif (upper and (n[0].upperNodeHalf != marker and n[0].lowerNodeHalf == marker)) or ((not upper) and (n[0].upperNodeHalf == marker)):
-                    logging.info("Verification tree mismatch for %s against marker %s and %s" % (str(self), str(marker), str(other)))
+                    logging.info("Verification tree mismatch for %s against marker %s and %s", str(self), str(marker), str(other))
                     break
                 if ((not upper) and (n[0].lowerNodeHalf == marker)): # check for marker if lower marker is search focus
                     if check:
@@ -372,7 +368,7 @@ class PLTAGTree(tree.Tree):
                         possibleAddees.append((currentParent[-1], oN[i]))
                     i += 1
             currentParent.append(n[0])
-        else:  # loop finished successfully
+        else:  # loop finished successfully - ha useless else
             if oN[i][1] == maxLvl: # next unmatched node from other is on the same level as the last correspondence
                 # add only those outstanding nodes on the same level as siblings of that last correspondence
                 # as all additional nodes in oN then children of those added
@@ -382,7 +378,7 @@ class PLTAGTree(tree.Tree):
                 mN[-1][0].extend([x[0] for x in oN[i:] if x[1] == (maxLvl + 1)])
             for e in possibleAddees: # add all intermediately found unmatched nodes of T(other) to their already determined parent nodes in self
                 e[0].append(e[1])
-            self._removeMark(marker)
+            self.removeMark(marker)
             result = True
         return result
 
@@ -410,8 +406,7 @@ class PLTAGTree(tree.Tree):
             marker = self.findFirstMarker(other, markers)
             result = self.findCorrespondence(other, marker)
             markers.append(marker)
-        else:
-            self.reset()
+        self.reset()
         return result
 
     def match(self, other, ignoreAffix=False, ignoreMorphCase=False, ignoreFunctionalCategory=True):
@@ -483,18 +478,18 @@ class PLTAGTree(tree.Tree):
                 c.mark(marker)
         return marker
 
-    def _removeMark(self, marker):
+    def removeMark(self, marker):
         """
         Removes all given marker marker from each node half in self and recursively from our children.
         
         Args:
             marker: integer value to be removed from this PLTAG tree
         """
-        self.upperNodeHalf = 'x' if self.upperNodeHalf == marker else self.upperNodeHalf
+        self.upperNodeHalf = 'x' if self.upperNodeHalf == marker else self.upperNodeHalf #TODO: cure me from da magic
         self.lowerNodeHalf = 'x' if self.lowerNodeHalf == marker else self.lowerNodeHalf
         for c in self:
             if not isinstance(c, str):
-                c._removeMark(marker)
+                c.removeMark(marker)
 
     def hasNoMarkers(self):
         """
@@ -532,7 +527,7 @@ class PLTAGTree(tree.Tree):
         Returns:
             list of PLTAGTree nodes
         """
-        if forceNew or self._currrentFringe is None:
+        if forceNew or self._currentFringe is None:
             i = 0
             v = 0
             fs = self.getNodeVisits()
@@ -542,8 +537,8 @@ class PLTAGTree(tree.Tree):
                 if fs[ci][0].isLexicalLeaf() and fs[ci][1] and fs[ci][0].hasNoMarker():
                     i = ci
                     break
-            self._currrentFringe = [x[0] for x in fs[i:v + 1]]
-        return self._currrentFringe
+            self._currentFringe = [x[0] for x in fs[i:v + 1]]
+        return self._currentFringe
     
     def getFringes(self):
         result = []
@@ -580,7 +575,7 @@ class PLTAGTree(tree.Tree):
     def setAsCurrentRoot(self, treeType = ElementaryTreeType.ARG):
         self.treeType = treeType
         self.isCurrentRoot = True
-        self._currrentFringe = self.getCurrentFringe()
+        self._currentFringe = self.getCurrentFringe()
 
     def isEmpty(self):
         return not (self.isLexicalLeaf() or (len(self) > 0))
@@ -595,18 +590,18 @@ class PLTAGTree(tree.Tree):
         TAGTreeUI(self).mainloop()
 
     @staticmethod
-    def tolist(tree, lvl=0):
+    def tolist(tri, lvl=0):
         """
         Transforms a given PLTAG tree into a top to bottom, left to right representation of itself.
         First item is the root node then roots first child then roots first child first child and so on.
         
         Args:
-            tree: the PLTAG tree to be transformed with its children and children's children
+            tri: the PLTAG tree to be transformed with its children and children's children
             lvl: optional depth level of recursion into the tree
         """
         result = []
-        result.append((tree, lvl))
-        for c in tree:
+        result.append((tri, lvl))
+        for c in tri:
             if not isinstance(c, str):
                 result.extend(PLTAGTree.tolist(c, lvl + 1))
         return result

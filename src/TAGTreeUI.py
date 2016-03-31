@@ -154,11 +154,13 @@ class PLTAGTreeWidget(CanvasWidget):
         """
         self._text = tree.label()
         self._tagx = [canvas.create_text(1, 1, text=tree.label())]
+        """ # play with me
         bounds = canvas.bbox(self._tagx[-1])  # returns a tuple like (x1, y1, x2, y2)
         width = bounds[2] - bounds[0]
         height = bounds[3] - bounds[1]
-        self._tagx.append(canvas.create_text(bounds[2] + 1, int(bounds[1] / 2) + bounds[1], text=str(tree.upperNodeHalf)))
-        self._tagx.append(canvas.create_text(bounds[2] + 1, int(bounds[1] / 2) - 1, text=str(tree.lowerNodeHalf)))
+        self._tagx.append(canvas.create_text(bounds[2] + 15, int(bounds[1] / 2) + bounds[1] + 4, font=("Helvetica", 4), text=str(tree.upperNodeHalf)))
+        self._tagx.append(canvas.create_text(bounds[2] + 15, int(bounds[1] / 2) - bounds[1] + 4, font=("Helvetica", 4), text=str(tree.lowerNodeHalf)))
+        """
         CanvasWidget.__init__(self, canvas, **attribs)
 
     def __setitem__(self, attr, value):

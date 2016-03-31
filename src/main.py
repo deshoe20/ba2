@@ -12,10 +12,17 @@ from PLTAGParser import PLTAGParser
 import logging
 
 if __name__ == '__main__':
-    logging.getLogger().setLevel(logging.DEBUG)
+    logging.getLogger().setLevel(logging.DEBUG) #TODO: move logging config to config file
     logging.basicConfig(filename='../res/dev_a1.log', level=logging.DEBUG)
+    console = logging.StreamHandler()
+    console.setLevel(logging.DEBUG)
+    formatter = logging.Formatter('%(module)-23s(%(levelname)-1s): %(message)s')
+    console.setFormatter(formatter)
+    logging.getLogger('').addHandler(console)
     parser = PLTAGParser("Ich liebe dieses Land sehr.")
     # log1 : 0.41s with only substitution - also malformed trees <-- fix with setting isCurrentRoot - nope asynchron
     # log2 : 0.53s with substitution - now working
     # log3 : 0.84s with substitution and adjunction up
     # log4 : 29.22s with substitution and adjunction! -- implement Test and check specification - then implement prediction
+    # log5 : 8.96s with substitution and adjunction on current and only first fringe of to be integrated
+    
