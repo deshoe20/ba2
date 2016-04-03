@@ -66,7 +66,7 @@ class PLTAGTreeTest(unittest.TestCase):
     
     def test_04_Verify(self):
         self.p.land = self.p.LEX['Land'][10][1].clone()
-        self.assertTrue(self.p.liebe.verify(self.p.land))
+        self.assertTrue(self.p.liebe.verification(self.p.land))
         self.p.liebe.draw()    
     
     def test_05_Adjunction(self):
@@ -86,6 +86,6 @@ class PLTAGTreeTest(unittest.TestCase):
         self.assertNotEqual(id(c[0]), id(self.p.ich[0]))
 
 if __name__ == "__main__":
-    unittest.main(sortTestMethodsUsing=False, failfast=True)
+    unittest.main()
     
     

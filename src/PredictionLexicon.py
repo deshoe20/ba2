@@ -16,8 +16,13 @@ class PredictionLexicon(list):
         """
         Constructor
         """
-    
+        list.__init__(self, [])
+
     def compatibleAppending(self, key, value):
+        """
+        Compatible appending.
+        """
         if key != "prediction:":
-            logging.error("Given dataset doesn't seem to be of prediction type: %s" % str(key))
-        self.append(value)  
+            logging.error("Given dataset doesn't seem to be of prediction type: %s", str(key))
+        self.append(value)
+        

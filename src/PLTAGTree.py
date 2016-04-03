@@ -37,11 +37,12 @@ class PLTAGTree(tree.Tree):
     The PLTAG describes a set of methods and rules for combining phrase structure trees as an approach for human language-processing modeling.
     PLTAG trees can be combined with each other using the substitution, adjunction or verification method.
     While substitution and adjunction are also defined in 'normal' TAG, the verification method is chief in this grammar variation.
-    Correctly implemented (yet to be tested) it is used to verify as predicted marked structure with the corresponding tree structure of a newly encountered word.
+    Correctly implemented (yet to be tested) it is used to verification as predicted marked structure with the corresponding tree structure of a newly encountered word.
     Trees can be displayed using tkinter and nltk code.
-    Every tree of this class can at the same time be a node as it is composed of PLTAG trees as children or parent. 
+    Every tree of this class can at the same time be seen as a node as it is composed of PLTAG trees as children or parent.
+     
     As its a list of trees and a tree in itself. Inherited from its superclass it consists basically of a list with a label.
-    THe PLTAG trees have in addition to that its subsequent methods of the grammar and additional feature data.
+    The PLTAG trees have in addition to that its subsequent methods of the grammar and additional feature data.
 
     ToDoNotes:
     remove str catch in loops and therefore override draw
@@ -142,7 +143,7 @@ class PLTAGTree(tree.Tree):
             self.upperNodeHalf = upperNodeHalfMarker
         # try to set node type and extend label with corresponding symbol -
         # only the lower node half marker can carry a type symbol
-        if lowerNodeHalfMarker:
+        if lowerNodeHalfMarker: #FIXME: !!
             if lowerNodeHalfMarker.endswith(str(NodeType.SUBST)):
                 self.nodeType = NodeType.SUBST
             elif lowerNodeHalfMarker.endswith(str(NodeType.FOOT)):
@@ -160,13 +161,10 @@ class PLTAGTree(tree.Tree):
         Blank adjoin - meaning checkup for validity and correctness should be in the calling method.
         
         Args:
-            other: the tree to be adjoined onto self (should have a appropriate foot node)
+            other: the tree to be adjoined onto self (should have an appropriate foot node)
         """
         n = other.fetchAdjunctionFoot()
-        if n is None:
-            logging.error("Adjunction failed - could not find corresponding node in %s", str(other))
-            #raise RuntimeError("Adjunction failed - could not find corresponding node in %s", str(self))
-        elif n.nodeType is NodeType.FOOT:
+        if n is not None:
             c = []
             if markAsPredicted:
                 # mark the adjoined subtree and the lower node half of the
@@ -182,7 +180,8 @@ class PLTAGTree(tree.Tree):
             n.nodeType = NodeType.INNER
             self.reset()
         else:
-            logging.warning("Can't adjoin on tree node with type: %s", self.nodeType)
+            logging.error("Adjunction failed - could not find corresponding foot node in %s", str(other))
+            #raise RuntimeError("Adjunction failed - could not find corresponding node in %s", str(self))
 
     def fetchAdjunctionFoot(self, root=None):
         """
@@ -198,7 +197,7 @@ class PLTAGTree(tree.Tree):
         """
         result = None
         root = self if root is None else root
-        if self.isLeaf() and self.match(root, True):
+        if self.isLeaf() and self.match(root, True) and (self.nodeType is NodeType.FOOT):
             result = self
         else:
             for c in self:
@@ -211,8 +210,7 @@ class PLTAGTree(tree.Tree):
     def substitution(self, other, markAsPredicted=False):
         """
         Substitutes the PLTAGTree other onto self if possible. Therefore checking if self is of NodeType.SUBST. 
-        Does not check for correct morphological information or correct structure of the tree to join. 
-        This should be done in the calling method if required.
+        Does not check for correct structure of the tree to join. This should be done in the calling method if required.
         Blank substitution - meaning checkup for validity and correctness should be in the calling method.
         
         Args:
@@ -284,7 +282,7 @@ class PLTAGTree(tree.Tree):
         """
         A method.
         
-        The overall functional aim of the this methods is to verify a predicted structure through a new word and adding this words structure.
+        The overall functional aim of the this methods is to verification a predicted structure through a new word and adding this words structure.
         
         Method tries to compute a corresponding subtree in self to a given other tree regarding given marker marked nodes.
         Marked nodes are originally of one single prediction tree that got integrated with another tree. Further parsing 
@@ -314,7 +312,7 @@ class PLTAGTree(tree.Tree):
         For further documentation about PLTAG correspondence please refer to Demberg, Keller and Koller (2013).
         
         Args:
-            other: the other tree structure used to verify the predicted sub tree structure in self
+            other: the other tree structure used to verification the predicted sub tree structure in self
             marker: a given marker of all the marked nodes of the predicted sub tree in self
         
         Returns:
@@ -358,7 +356,7 @@ class PLTAGTree(tree.Tree):
                         i += 1 # and try against next node in T(other)
                 # verification tree mismatch
                 elif (upper and (n[0].upperNodeHalf != marker and n[0].lowerNodeHalf == marker)) or ((not upper) and (n[0].upperNodeHalf == marker)):
-                    logging.info("Verification tree mismatch for %s against marker %s and %s", str(self), str(marker), str(other))
+                    logging.info("Verification or self tree malformed for %s against marker %s and %s", str(self), str(marker), str(other))
                     break
                 if ((not upper) and (n[0].lowerNodeHalf == marker)): # check for marker if lower marker is search focus
                     if check:
@@ -367,24 +365,28 @@ class PLTAGTree(tree.Tree):
                     else: # see above
                         possibleAddees.append((currentParent[-1], oN[i]))
                     i += 1
-            currentParent.append(n[0])
-        else:  # loop finished successfully - ha useless else
+            if foundCorrelation:
+                currentParent.append(n[0])
+            else:  # every node in nM needs a match or fail
+                logging.info("Verification tree mismatch for %s against marker %s and %s", str(self), str(marker), str(other))
+                break  # EXIT - verification failed for given marker
+        else:  # loop finished successfully
             if oN[i][1] == maxLvl: # next unmatched node from other is on the same level as the last correspondence
                 # add only those outstanding nodes on the same level as siblings of that last correspondence
                 # as all additional nodes in oN then children of those added
                 currentParent[-1].extend([x[0] for x in oN[i:] if x[1] == maxLvl])
             elif oN[i][1] == (maxLvl + 1): # next unmatched node from other is on the next level as the last correspondence
-                # get only those nodes to append to self from other that are directly below the last corresponding node
+                # get only those nodes to append to self from other beginning at i that are directly below the last corresponding node
                 mN[-1][0].extend([x[0] for x in oN[i:] if x[1] == (maxLvl + 1)])
             for e in possibleAddees: # add all intermediately found unmatched nodes of T(other) to their already determined parent nodes in self
                 e[0].append(e[1])
-            self.removeMark(marker)
+            self.removeMarkers(marker)
             result = True
         return result
 
-    def verify(self, other):
+    def verification(self, other):
         """
-        PLTAG verify method. 
+        PLTAG verification method. 
         Used to verify a previously predicted structure/subtree with the structure provided by a newly encounter word during parsing.
         In order to verify this method tries to find a correspondence of a subtree in a tree to another tree.
         
@@ -478,7 +480,7 @@ class PLTAGTree(tree.Tree):
                 c.mark(marker)
         return marker
 
-    def removeMark(self, marker):
+    def removeMarkers(self, marker):
         """
         Removes all given marker marker from each node half in self and recursively from our children.
         
@@ -489,7 +491,7 @@ class PLTAGTree(tree.Tree):
         self.lowerNodeHalf = 'x' if self.lowerNodeHalf == marker else self.lowerNodeHalf
         for c in self:
             if not isinstance(c, str):
-                c.removeMark(marker)
+                c.removeMarkers(marker)
 
     def hasNoMarkers(self):
         """
