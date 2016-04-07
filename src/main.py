@@ -25,4 +25,5 @@ if __name__ == '__main__':
     # log3 : 0.84s with substitution and adjunction up
     # log4 : 29.22s with substitution and adjunction! -- implement Test and check specification - then implement prediction
     # log5 : 8.96s with substitution and adjunction on current and only first fringe of to be integrated
+    # log6 : 14.08s with substitution and adjunction on current and only first fringe of to be integrated - stack: 1484
     

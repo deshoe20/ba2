@@ -14,6 +14,7 @@ from PredictionLexicon import PredictionLexicon
 from ElementaryLexicon import ElementaryLexicon
 from nltk import tree
 from Util import Util
+from pprint import pprint
 
 #1    lassen    ADJ    (VP-HD^null_x (VP-HD^x_null* )(VP-*T2*-RE^x_x (PP-*T1*-OP^x_null! )(VP-HD^x_x (NP-OA[acc]^x_null! )(VP-HD^x_x (VP-OC^x_null! )(VP-HD^x_x (VZ-HD^x_x (PTKZU-PM^x_null! )(VZ-HD^x_x (VVINF-HD^x_x lassen<>))))))))
 
@@ -39,14 +40,23 @@ def main():
 #    LEX = Util.loadPredictionLexicon(True)
     LEX = Util.loadElementaryLexicon(True)
 
-    logging.info("Length of lexicon: %d", len(LEX))
 #    LEX[10449][1].draw()
-    cf = LEX['liebe'][4][1].getCurrentFringe(True)
-    cf2 = LEX['liebe'][4][1].getFringes()
-    print("Current fringe:\t{}".format(str(cf)))
-    for n in cf2:
-        print("Fringe:\t{}".format(str(n)))
-    LEX['liebe'][4][1].draw()
+#    cf = LEX['liebe'][4][1].getCurrentFringe(True)
+#    cf2 = LEX['liebe'][4][1].getFringes()
+#    print("Current fringe:\t{}".format(str(cf)))
+#    for n in cf2:
+#        print("Fringe:\t{}".format(str(n)))
+#    ll = LEX['liebe']
+#    for c in ll:
+#        c[1].draw()
+#    LEX['Tokio'][3][1].draw()
+#    LEX['Ich'][0][1].draw()
+#    LEX['liebe'][4][1].draw()
+#    LEX['dieses'][1][1].draw()
+    l = LEX['Land'][10][1].clone()
+    l[0].substitution(LEX['dieses'][1][1])
+    l.draw()
+#    LEX['sehr'][33][1].draw()
 #    cf[2].set_label("HANT")
 #    LEX['Amaru'][0][1].draw()
 #    print(str(LEX['tot'][5][1].isCurrentRoot))

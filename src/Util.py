@@ -5,14 +5,14 @@ Created on 04.01.2016
 @author: Albert
 """
 
-import pickle
-from Enum import ConfigType
-from configparser import ConfigParser
 from os import path
+import pickle
+from configparser import ConfigParser
 import inspect
+import logging
+from Enum import ConfigType
 import PLTAGTree
 import ElementaryLexicon
-import logging
 import TAGLexiconReader
 import PredictionLexicon
 
@@ -21,10 +21,10 @@ class Util(object):
     """
     classdocs
     """
-    profileT = ConfigType.DEFAULT
-    config = None
-    tlexicon = None
-    plexicon = None
+    _profileT = ConfigType.DEFAULT
+    _loadedconfig = None
+    _tlexicon = None
+    _plexicon = None
     BO = '('
     BC = ')'
 
@@ -106,13 +106,13 @@ class Util(object):
 
     @staticmethod
     def setConfigProfile(profileType):
-        Util.profileT = profileType
+        Util._profileT = profileType
 
     @staticmethod
     def getConfigEntry(profileType=None):
-        if Util.config is None:
-            Util.config = ConfigParser()
-            Util.config.read("../res/config.ini")
-            Util.config = Util.config[
-                str(Util.profileT if profileType is None else profileType)]
-        return Util.config
+        if Util._loadedconfig is None:
+            Util._loadedconfig = ConfigParser()
+            Util._loadedconfig.read("../res/_loadedconfig.ini")
+            Util._loadedconfig = Util._loadedconfig[
+                str(Util._profileT if profileType is None else profileType)]
+        return Util._loadedconfig

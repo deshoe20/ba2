@@ -77,7 +77,8 @@ class TAGLexiconReader(object):
             else:
                 logging.warning("Line has no valid tree group: %s", ts)
         else:
-            logging.warning("Line failed to comply: %s", l)
+            logging.warning(
+                "Line failed to comply with expected line pattern: %s", l)
 
     def convertTAGLexiconToPython(self, fileName):
         f = open(

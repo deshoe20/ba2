@@ -48,6 +48,7 @@ class PLTAGTree(tree.Tree):
     remove str catch in loops and therefore override draw
     solve the reflexive changes problem through appropriate cloning 
     too much documentation
+    optimize recursion through list parameter
     """
 
     THEONEPATTERN = re.compile(r'^([^\-]+)(\-([^\[\$]+)(\[([^\]\$]+)\])?(\$.*\$)?)?\^([^_]+)_([\S]+)(\s+(.+)<>)?(\s+-)?\s*$', re.UNICODE)
@@ -178,7 +179,6 @@ class PLTAGTree(tree.Tree):
                 n.set_label(n.label()[:-1])
             n.extend(c)
             n.nodeType = NodeType.INNER
-            self.reset()
         else:
             logging.error("Adjunction failed - could not find corresponding foot node in %s", str(other))
             #raise RuntimeError("Adjunction failed - could not find corresponding node in %s", str(self))
@@ -227,7 +227,6 @@ class PLTAGTree(tree.Tree):
                 # changes node type to NodeType.INNER if substitution was
                 # successful and at least one child was added.
                 self.nodeType = NodeType.INNER
-                self.reset()
         else:
             logging.warning("Can't substitute on tree node with type: %s", self.nodeType)
 
@@ -270,9 +269,11 @@ class PLTAGTree(tree.Tree):
             list of tuple of found nodes and their corresponding level or an empty list if none could be found
         """
         result = []
-        if ((self.lowerNodeHalf == marker) or (self.upperNodeHalf == marker)):
+        if (self.lowerNodeHalf == marker):
             result.append((self, level))
             level += 1 # is used in recursion for the children
+        elif (self.upperNodeHalf == marker):
+            result.append((self, level))
         for c in self:
             if not isinstance(c, str):
                 result.extend(c.getNodesWithMarker(marker, level))
@@ -323,14 +324,14 @@ class PLTAGTree(tree.Tree):
             
         """
         result = False
-        # both self or rather only the nodes in self with marked node halves are converted into a list of tuple
-        # each tuple consist of the respective node and the level the node is in its original tree
+        # only the nodes in self with marked node halves are converted into a list of tuple
+        # each tuple consist of the respective node and the level the node is on in its original tree
         # the serial processing of the lists fulfills the top to bottom and left to right criterium
-        mN = self.getNodesWithMarker(marker) # self(of marker) as a list of tuple (#NODE, #LEVEL): i.e. mN[i][0] == someNode 
+        mN = self.getNodesWithMarker(marker) # self(of marker) subtree as a list of tuple (#NODE, #LEVEL): i.e. mN[i][0] == someNode 
         oN = PLTAGTree.tolist(other) # other as a list of tuple (#NODE, #LEVEL): i.e. mN[i][1] == someLevel 
         upper = False # whether or not the current yet to be mapped node half is upper or lower - as it starts at the root it only has a lower
         i = 0 # iterator over the list of T(other)
-        maxLvl = max([x[1] for x in mN]) # the maximal level depth in the to be verified tree in self
+        maxLvl = max([x[1] for x in mN]) # the maximal level depth in the to be verified subtree in self
         possibleAddees = [] # list to store the found non correlating nodes in T(other) to be added to self upon success
         currentParent = [] # list to keep track which is the current parent - which is always currentParent[-1] if any
         currentLvl = 0 # current level in self(of marker) subtree
@@ -408,7 +409,6 @@ class PLTAGTree(tree.Tree):
             marker = self.findFirstMarker(other, markers)
             result = self.findCorrespondence(other, marker)
             markers.append(marker)
-        self.reset()
         return result
 
     def match(self, other, ignoreAffix=False, ignoreMorphCase=False, ignoreFunctionalCategory=True):
@@ -526,13 +526,16 @@ class PLTAGTree(tree.Tree):
         Computes the fringe starting at the rightmost lexical leaf to either the next non lexical leaf or the root node.
         Searches for conditions met in the reversed list of all fringes of the self tree.
         
+        Args:
+            forceNew: optional parameter to determine whether or not to use cached current fringe or calculate anew
+        
         Returns:
             list of PLTAGTree nodes
         """
         if forceNew or self._currentFringe is None:
             i = 0
             v = 0
-            fs = self.getNodeVisits()
+            fs = self._getNodeVisits()
             for ci in range(len(fs) - 1, -1, -1):
                 if (fs[ci][0].isCurrentRoot and fs[ci][1]) or (fs[ci][0].isLeaf() and not fs[ci][0].isLexicalLeaf() and not fs[ci][1]):
                     v = ci
@@ -543,8 +546,14 @@ class PLTAGTree(tree.Tree):
         return self._currentFringe
     
     def getFringes(self):
+        """
+        Fetches all fringes in self. Each Fringe goes from root or a leaf to the next leaf or overall ends back at root. 
+        
+        Returns:
+            list of tuple of PLTAGTree nodes and boolean (True for up or False for downward visit)
+        """
         result = []
-        ns = self.getNodeVisits()
+        ns = self._getNodeVisits()
         start = None
         for i in range(len(ns)):
             n = ns[i][0]
@@ -556,12 +565,12 @@ class PLTAGTree(tree.Tree):
                     start = None
         return result
 
-    def getNodeVisits(self):
+    def _getNodeVisits(self):
         result = [(self, False)]
         for c in self:
             if type(c) is not PLTAGTree:
                 break  # the string of a lexicalLeaf
-            result.extend(c.getNodeVisits())
+            result.extend(c._getNodeVisits())
         result.append((self, True))
         return result
 

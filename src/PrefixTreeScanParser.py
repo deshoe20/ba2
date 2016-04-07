@@ -40,6 +40,7 @@ class PrefixTreeScanParser(Thread):
         for n in temp.getCurrentFringe():
             if (n.nodeType == NodeType.SUBST) and n.match(t2, True):
                 n.substitution(t2)
+                temp.reset()
                 self.result.put(temp)
                 logging.debug(
                     "Integrated %s onto %s via down substitution: %s", str(t2), str(t1), str(temp))
@@ -51,6 +52,7 @@ class PrefixTreeScanParser(Thread):
         for f in n:
             if (f[0].nodeType == NodeType.SUBST) and f[0].match(t1, True):
                 f[0].substitution(t1)
+                temp.reset()
                 self.result.put(temp)
                 logging.debug(
                     "Integrated %s onto %s via up substitution: %s", str(t1), str(t2), str(temp))
@@ -68,6 +70,7 @@ class PrefixTreeScanParser(Thread):
             for n in temp1.getCurrentFringe():
                 if (n.nodeType == NodeType.INNER) and n.match(temp2):
                     n.adjunction(temp2)
+                    temp1.reset()
                     self.result.put(temp1)
                     logging.debug(
                         "Integrated %s onto %s via down adjunction: %s", str(t2), str(t1), str(temp2))
@@ -85,6 +88,7 @@ class PrefixTreeScanParser(Thread):
             for f in n:
                 if (f[0].nodeType == NodeType.INNER) and f[0].match(pos, True):
                     f[0].adjunction(temp1)
+                    temp2.reset()
                     self.result.put(temp2)
                     logging.debug(
                         "Integrated %s onto %s via up adjunction: %s", str(t1), str(t2), str(temp2))
