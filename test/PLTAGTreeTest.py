@@ -14,7 +14,7 @@ import unittest
 from Util import Util
 
 """
-%%% 26494
+%%% 26494 (26490 in TIGER 2.1)
 Ich liebe dieses Land sehr.
 PPER Ich    VVFIN liebe    PDAT dieses    NN Land    ADV sehr    $. .
 (S (S (NP[nom] (PPER Ich))(VP (VP (VP (VVFIN liebe))(NP[acc] (DP[acc] (PDAT dieses))(NP[acc] (NN Land))))(AVP (ADV sehr))))($. .))

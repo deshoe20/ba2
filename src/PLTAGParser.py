@@ -15,16 +15,24 @@ import random
 
 class PLTAGParser(object):
     """
-    classdocs
+    Psycholinguistically Motivated Tree-Adjoining Grammar Parser
+    
+    loop horror:
+        sent in text
+            word in sent
+                prefix tree out of all current prefix trees
+                    for each elementary tree start thread
+                        (additional layers for potential prediction tree combinations)
+    --> (5 + prediction depth)-layer loop               
+    
     """
 
     def __init__(self, text=None):
         """
         Constructor
         """
-        self.LEX = Util.loadElementaryLexicon(True)
+        self.LEX = Util.getELEX()
         self.LEX.sortMe()
-        self.PRED = Util.loadPredictionLexicon(True)
         self.parseText(text)
 
     def parseText(self, text):
@@ -44,7 +52,7 @@ class PLTAGParser(object):
         prefixTrees = None
         for i in range(len(tokens)):
             newWord = tokens[i]
-            eTs = [x[1] for x in self.LEX[newWord]]  # list of elementaryTree
+            eTs = [x[1] for x in self.LEX[newWord]]  # list of elementaryTree #TODO: do you copy?
             logging.debug(
                 "Found %d elementary trees for word \"%s\"", len(eTs), newWord)
             if len(eTs) == 0:
@@ -69,7 +77,7 @@ class PLTAGParser(object):
             prefixTrees[random.randint(0, len(prefixTrees))]), str(prefixTrees[random.randint(0, len(prefixTrees))]))
         return result
 
-    def tryTntegrateTrees(self, prefixTree, canonicalTrees):
+    def tryTntegrateTrees(self, prefixTree, elementaryTrees):
         """
         integrate
         if none remove
@@ -77,13 +85,13 @@ class PLTAGParser(object):
         results = Queue()
         scanThreads = []
         result = []
-        for cT in canonicalTrees:
+        for cT in elementaryTrees:
             logging.debug("Trying to add tree %s to current fringe %s on current prefix tree %s", 
                 str(cT), str(prefixTree.getCurrentFringe()), str(prefixTree))
             scanThreads.append(PrefixTreeScanParser(prefixTree, cT, results))
             scanThreads[-1].start()
         for t in scanThreads:
-            t.join()
+            t.join() #TODO: move join one layer up
         while(not results.empty()):
             result.append(results.get())
         return result

@@ -20,16 +20,18 @@ class PrefixTreeScanParser(Thread):
         Constructor
         """
         super().__init__()
+        self.PRED = Util.getPLEX()
+        self.PRED.sortMe()
         self.prefixTree = prefixTree
         self.elementaryTree = elementaryTree
         self.result = result
-        self.predictionDepth = int(Util.getConfigEntry()['predictionDepth'])
+        self.predictionDepth = int(Util.getConfigEntry()['prediction_depth'])
 
     def run(self):
         # if none try prediction and again
         if (not self.prefixTree.isCurrentRoot) or (not self.elementaryTree.isCurrentRoot):
             logging.warning("WARNING - malformed tree detected!\n%s\n%s",
-                         str(self.prefixTree), str(self.elementaryTree))
+                            str(self.prefixTree), str(self.elementaryTree))
         self.lookForSubstitutionDown(self.prefixTree, self.elementaryTree)
         self.lookForSubstitutionUp(self.prefixTree, self.elementaryTree)
         self.lookForAdjunctionDown(self.prefixTree, self.elementaryTree)

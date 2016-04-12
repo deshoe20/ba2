@@ -17,6 +17,9 @@ class PredictionLexicon(list):
         Constructor
         """
         list.__init__(self, [])
+        
+    def sortMe(self):
+        self.sort(key = lambda x: int(x[0]), reverse = True)
 
     def compatibleAppending(self, key, value):
         """

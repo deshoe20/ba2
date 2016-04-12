@@ -89,6 +89,18 @@ class Util(object):
         Util._reloadIfChanged(
             reloadIfChanged, lexPath, rawLexPath, pltagTreeCls, eleLexCls)
         return Util.loadLexicon(lexPath)
+    
+    @staticmethod
+    def getELEX():
+        if Util._tlexicon is None:
+            Util._tlexicon = Util.loadElementaryLexicon(True)
+        return Util._tlexicon
+    
+    @staticmethod
+    def getPLEX():
+        if Util._plexicon is None:
+            Util._plexicon = Util.loadPredictionLexicon(True)
+        return Util._plexicon
 
     @staticmethod
     def loadLexicon(fileName):
@@ -111,8 +123,7 @@ class Util(object):
     @staticmethod
     def getConfigEntry(profileType=None):
         if Util._loadedconfig is None:
-            Util._loadedconfig = ConfigParser()
-            Util._loadedconfig.read("../res/_loadedconfig.ini")
-            Util._loadedconfig = Util._loadedconfig[
-                str(Util._profileT if profileType is None else profileType)]
+            c = ConfigParser()
+            c.read("../res/config.ini")
+            Util._loadedconfig = c[str(Util._profileT if profileType is None else profileType)]
         return Util._loadedconfig

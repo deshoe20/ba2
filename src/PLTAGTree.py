@@ -19,11 +19,11 @@ class PLTAGTree(tree.Tree):
     Psycholinguistically Motivated Tree-Adjoining Grammar Tree
     implemented after the works of Vera Demberg (Saarland University), Frank Keller (University of Edinburgh) and Alexander Koller (University of Potsdam):
     'Incremental, Predictive Parsing with Psycholinguistically Motivated Tree-Adjoining Grammar' (2013)
-    
+
     Imported tree data and therefore the datamodel of this PLTAG trees class is heavily based on the work of Miriam Kaeshammer (Saarland University):
     'A German Treebank and Lexicon for Tree-Adjoining Grammars' (2012)
     Which in turn is based on the therein used TIGER treebank (http://www.ims.uni-stuttgart.de/forschung/ressourcen/korpora/tiger.en.html).
-    
+
     Technically this class inherits from python data structure 'list' via its direct inheritance from the nltk.tree.Tree class:
     Natural Language Toolkit: Text Trees
     Copyright (C) 2001-2015 NLTK Project
@@ -40,7 +40,7 @@ class PLTAGTree(tree.Tree):
     Correctly implemented (yet to be tested) it is used to verification as predicted marked structure with the corresponding tree structure of a newly encountered word.
     Trees can be displayed using tkinter and nltk code.
     Every tree of this class can at the same time be seen as a node as it is composed of PLTAG trees as children or parent.
-     
+
     As its a list of trees and a tree in itself. Inherited from its superclass it consists basically of a list with a label.
     The PLTAG trees have in addition to that its subsequent methods of the grammar and additional feature data.
 
@@ -51,7 +51,8 @@ class PLTAGTree(tree.Tree):
     optimize recursion through list parameter
     """
 
-    THEONEPATTERN = re.compile(r'^([^\-]+)(\-([^\[\$]+)(\[([^\]\$]+)\])?(\$.*\$)?)?\^([^_]+)_([\S]+)(\s+(.+)<>)?(\s+-)?\s*$', re.UNICODE)
+    THEONEPATTERN = re.compile(
+        r'^([^\-]+)(\-([^\[\$]+)(\[([^\]\$]+)\])?(\$.*\$)?)?\^([^_]+)_([\S]+)(\s+(.+)<>)?(\s+-)?\s*$', re.UNICODE)
     """
     THEONEPATTERN: parses tree data strings for one single tree node
     
@@ -76,15 +77,15 @@ class PLTAGTree(tree.Tree):
     def __init__(self, nodeString, children=None):
         """
         Constructor
-        
+
         Args:
             nodeString: string data for the tree to be constructed out of (i.e. 'VVPP-HD^x_x abgeklärt<>')
             children: list of trees to be appended to self
-        
+
         Returns:
             self
         """
-        #(VP-HD^null_x (VP-HD^x_null* )(VP-*T2*-RE^x_x (PP-*T1*-OP^x_null! )(VP-HD^x_x (NP-OA[acc]^x_null! )(VP-HD^x_x (VP-OC^x_null! )(VP-HD^x_x (VZ-HD^x_x (PTKZU-PM^x_null! )(VZ-HD^x_x (VVINF-HD^x_x lassen<>))))))))
+        #(VP-HD^null_x (VP-HD^x_null* )(VP-*T2*-RE^x_x (PP-*T1*-OP^x_null! )(VP
         if isinstance(nodeString, str):
             # get phrasal category and set it as label for this tree
             m = self.__class__.THEONEPATTERN.match(nodeString)
@@ -92,8 +93,9 @@ class PLTAGTree(tree.Tree):
                 super().__init__(m.group(1), children)
 
             else:
-                logging.error("Failed to extract valid tree from string: %s", nodeString)
-                #raise RuntimeError("No valid category found for {}", s))
+                logging.error(
+                    "Failed to extract valid tree from string: %s", nodeString)
+                # raise RuntimeError("No valid category found for {}", s))
                 return
             self.initialize()
             self.process(m)
@@ -108,13 +110,19 @@ class PLTAGTree(tree.Tree):
         # (->accusative) or dat (->dative)
         self.morph = MorphCase.UNDEF
         self.nodeType = NodeType.UNDEF  # current status of the node
-        self.isCurrentRoot = False # the root node has no further parent nodes above it
-        self.treeType = None # tree type for substitution node
-        self.upperNodeHalf = None # prediction or node status marking for the upper half of the current node
-        self.lowerNodeHalf = None # prediction or node status marking for the lower half of the current node
-        self._currentFringe = None # precompute current fringe for faster integration parsing
-        self.functionalCategory = None # functional category of the node
-        
+        # the root node has no further parent nodes above it
+        self.isCurrentRoot = False
+        self.treeType = None  # tree type for substitution node
+        # prediction or node status marking for the upper half of the current
+        # node
+        self.upperNodeHalf = None
+        # prediction or node status marking for the lower half of the current
+        # node
+        self.lowerNodeHalf = None
+        # precompute current fringe for faster integration parsing
+        self._currentFringe = None
+        self.functionalCategory = None  # functional category of the node
+
     def reset(self):
         """
         Reset root node fields after integration.
@@ -124,7 +132,7 @@ class PLTAGTree(tree.Tree):
     def process(self, match):
         """
         Parses the given tree string to fill in data fields.
-        
+
         Args:
             match: regex match of the one pattern against the given tree string
         """
@@ -138,13 +146,14 @@ class PLTAGTree(tree.Tree):
             self.morph = MorphCase.fromString(morphologicalInfo)
         # try to get the optional morphological information in the tree string
         if functionalInfo:
-            self.functionalCategory = FunctionalCategory.fromString(functionalInfo)
+            self.functionalCategory = FunctionalCategory.fromString(
+                functionalInfo)
         # try to get and set upper node marker
         if upperNodeHalfMarker:
             self.upperNodeHalf = upperNodeHalfMarker
         # try to set node type and extend label with corresponding symbol -
         # only the lower node half marker can carry a type symbol
-        if lowerNodeHalfMarker: #FIXME: !!
+        if lowerNodeHalfMarker:  # FIXME: !!
             if lowerNodeHalfMarker.endswith(str(NodeType.SUBST)):
                 self.nodeType = NodeType.SUBST
             elif lowerNodeHalfMarker.endswith(str(NodeType.FOOT)):
@@ -160,7 +169,7 @@ class PLTAGTree(tree.Tree):
         """
         Adjoins the PLTAGTree other onto self. Adds other children to self and self children to the corresponding foot node in other.
         Blank adjoin - meaning checkup for validity and correctness should be in the calling method.
-        
+
         Args:
             other: the tree to be adjoined onto self (should have an appropriate foot node)
         """
@@ -180,20 +189,21 @@ class PLTAGTree(tree.Tree):
             n.extend(c)
             n.nodeType = NodeType.INNER
         else:
-            logging.error("Adjunction failed - could not find corresponding foot node in %s", str(other))
+            logging.error(
+                "Adjunction failed - could not find corresponding foot node in %s", str(other))
             #raise RuntimeError("Adjunction failed - could not find corresponding node in %s", str(self))
 
     def fetchAdjunctionFoot(self, root=None):
         """
         Utility method to recursively fetch the foot/leaf node that matches the calling trees root.
         Used in adjunction to append the lowered subtree.
-        
+
         Args:
             root: optional define the node that should be used to look for a matching leaf
-            
+
         Returns:
             the matching foot/leaf node
-        
+
         """
         result = None
         root = self if root is None else root
@@ -212,7 +222,7 @@ class PLTAGTree(tree.Tree):
         Substitutes the PLTAGTree other onto self if possible. Therefore checking if self is of NodeType.SUBST. 
         Does not check for correct structure of the tree to join. This should be done in the calling method if required.
         Blank substitution - meaning checkup for validity and correctness should be in the calling method.
-        
+
         Args:
             other: the PLTAG tree to be substituted
             markAsPredicted: whether or not the substituted node should be marked as predicted
@@ -228,12 +238,13 @@ class PLTAGTree(tree.Tree):
                 # successful and at least one child was added.
                 self.nodeType = NodeType.INNER
         else:
-            logging.warning("Can't substitute on tree node with type: %s", self.nodeType)
+            logging.warning(
+                "Can't substitute on tree node with type: %s", self.nodeType)
 
     def findFirstMarker(self, other=None, exclude=[]):
         """
         Searches for the first occurrence of a marked node and returns marker integer value or none.
-        
+
         Args:
             other: optional node which the first found node in self should match
             exclude: optional parameter takes a list of integer to be excluded as potential markers.
@@ -260,18 +271,18 @@ class PLTAGTree(tree.Tree):
         Recursively fetches all nodes with a given marker either at the lower or upper node half or both.
         The resulting list can be viewed as the tree nodes halves of a predicted subtree in their original order. 
         Only works with well marked trees i.e. via the mark method.
-        
+
         Args:
             marker: integer value as identifier for predicted node halves in self
             level: not needed - will be used by the recursion
-        
+
         Returns:
             list of tuple of found nodes and their corresponding level or an empty list if none could be found
         """
         result = []
         if (self.lowerNodeHalf == marker):
             result.append((self, level))
-            level += 1 # is used in recursion for the children
+            level += 1  # is used in recursion for the children
         elif (self.upperNodeHalf == marker):
             result.append((self, level))
         for c in self:
@@ -282,9 +293,9 @@ class PLTAGTree(tree.Tree):
     def findCorrespondence(self, other, marker):
         """
         A method.
-        
+
         The overall functional aim of the this methods is to verification a predicted structure through a new word and adding this words structure.
-        
+
         Method tries to compute a corresponding subtree in self to a given other tree regarding given marker marked nodes.
         Marked nodes are originally of one single prediction tree that got integrated with another tree. Further parsing 
         progress could then have scattered those marked node halves all over self. Could have. So taken out of the work of 
@@ -309,41 +320,59 @@ class PLTAGTree(tree.Tree):
             then the subtrees of T(other) below uk+1, ..., un are added to T(self) as the k + 1-st to n-th child of h.
         In addition to adding the non correlating nodes in T(other) to self all markers of the given marker are removed from self.
         (maybe it does all that)
-        
+
         For further documentation about PLTAG correspondence please refer to Demberg, Keller and Koller (2013).
-        
+
         Args:
             other: the other tree structure used to verification the predicted sub tree structure in self
             marker: a given marker of all the marked nodes of the predicted sub tree in self
-        
+
         Returns:
             True if a valid correspondence based on the given marker was found
-            
+
         ToDo:
             Come up with additional valid loop breaks to find mismatching T(self) with T(other) early.
-            
+
         """
         result = False
         # only the nodes in self with marked node halves are converted into a list of tuple
         # each tuple consist of the respective node and the level the node is on in its original tree
-        # the serial processing of the lists fulfills the top to bottom and left to right criterium
-        mN = self.getNodesWithMarker(marker) # self(of marker) subtree as a list of tuple (#NODE, #LEVEL): i.e. mN[i][0] == someNode 
-        oN = PLTAGTree.tolist(other) # other as a list of tuple (#NODE, #LEVEL): i.e. mN[i][1] == someLevel 
-        upper = False # whether or not the current yet to be mapped node half is upper or lower - as it starts at the root it only has a lower
-        i = 0 # iterator over the list of T(other)
-        maxLvl = max([x[1] for x in mN]) # the maximal level depth in the to be verified subtree in self
-        possibleAddees = [] # list to store the found non correlating nodes in T(other) to be added to self upon success
-        currentParent = [] # list to keep track which is the current parent - which is always currentParent[-1] if any
-        currentLvl = 0 # current level in self(of marker) subtree
-        for n in mN: # cycle through marked nodes in self top to bottom, left to right
-            foundCorrelation = False # whether or not of n and oN[i] was found
-            # removes the last parent node from list if a level change from lower to upper happened or a sibling of the last is the current parent node
-            if (currentLvl != 0) and (n[1] <= currentLvl): 
+        # the serial processing of the lists fulfills the top to bottom and
+        # left to right criterium
+        # self(of marker) subtree as a list of tuple (#NODE, #LEVEL): i.e.
+        # mN[i][0] == someNode
+        mN = self.getNodesWithMarker(marker)
+        # other as a list of tuple (#NODE, #LEVEL): i.e. mN[i][1] == someLevel
+        oN = PLTAGTree.tolist(other)
+        # whether or not the current yet to be mapped node half is upper or
+        # lower - as it starts at the root it only has a lower
+        upper = False
+        i = 0  # iterator over the list of T(other)
+        # the maximal level depth in the to be verified subtree in self
+        maxLvl = max([x[1] for x in mN])
+        # list to store the found non correlating nodes in T(other) to be added
+        # to self upon success
+        possibleAddees = []
+        # list to keep track which is the current parent - which is always
+        # currentParent[-1] if any
+        currentParent = []
+        currentLvl = 0  # current level in self(of marker) subtree
+        # cycle through marked nodes in self top to bottom, left to right
+        for n in mN:
+            foundCorrelation = False  # whether or not of n and oN[i] was found
+            # removes the last parent node from list if a level change from
+            # lower to upper happened or a sibling of the last is the current
+            # parent node
+            if (currentLvl != 0) and (n[1] <= currentLvl):
                 currentParent.pop()
             currentLvl = n[1]
-            while(not foundCorrelation and (i < len(oN))): # cycles through nodes of T(other) as long as no complete correlation to n was found
-                check = n[0].match(oN[i][0], True) and (currentLvl == oN[i][1]) # fulfillment of label and structure identity criteria
-                if (upper and (n[0].upperNodeHalf == marker)): # check for marker if upper marker is search focus
+            # cycles through nodes of T(other) as long as no complete
+            # correlation to n was found
+            while(not foundCorrelation and (i < len(oN))):
+                # fulfillment of label and structure identity criteria
+                check = n[0].match(oN[i][0], True) and (currentLvl == oN[i][1])
+                # check for marker if upper marker is search focus
+                if (upper and (n[0].upperNodeHalf == marker)):
                     if check:
                         # determine which kind of node half is expected next
                         if (oN[i][0].isLeaf() or (n[1] == maxLvl)):
@@ -352,34 +381,47 @@ class PLTAGTree(tree.Tree):
                             upper = False
                         foundCorrelation = True
                     else:  # if node n is marked but oN[i] doesn't fit
-                        # it means oN[i] should be added to self if correspondence for mN could be completed onwards
+                        # it means oN[i] should be added to self if
+                        # correspondence for mN could be completed onwards
                         possibleAddees.append((currentParent[-1], oN[i]))
-                        i += 1 # and try against next node in T(other)
+                        i += 1  # and try against next node in T(other)
                 # verification tree mismatch
                 elif (upper and (n[0].upperNodeHalf != marker and n[0].lowerNodeHalf == marker)) or ((not upper) and (n[0].upperNodeHalf == marker)):
-                    logging.info("Verification or self tree malformed for %s against marker %s and %s", str(self), str(marker), str(other))
+                    logging.info("Verification or self tree malformed for %s against marker %s and %s", str(
+                        self), str(marker), str(other))
                     break
-                if ((not upper) and (n[0].lowerNodeHalf == marker)): # check for marker if lower marker is search focus
+                # check for marker if lower marker is search focus
+                if ((not upper) and (n[0].lowerNodeHalf == marker)):
                     if check:
                         upper = True
                         foundCorrelation = True
-                    else: # see above
+                    else:  # see above
                         possibleAddees.append((currentParent[-1], oN[i]))
                     i += 1
             if foundCorrelation:
                 currentParent.append(n[0])
             else:  # every node in nM needs a match or fail
-                logging.info("Verification tree mismatch for %s against marker %s and %s", str(self), str(marker), str(other))
+                logging.info("Verification tree mismatch for %s against marker %s and %s", str(
+                    self), str(marker), str(other))
                 break  # EXIT - verification failed for given marker
         else:  # loop finished successfully
-            if oN[i][1] == maxLvl: # next unmatched node from other is on the same level as the last correspondence
+            # next unmatched node from other is on the same level as the last
+            # correspondence
+            if oN[i][1] == maxLvl:
                 # add only those outstanding nodes on the same level as siblings of that last correspondence
                 # as all additional nodes in oN then children of those added
-                currentParent[-1].extend([x[0] for x in oN[i:] if x[1] == maxLvl])
-            elif oN[i][1] == (maxLvl + 1): # next unmatched node from other is on the next level as the last correspondence
-                # get only those nodes to append to self from other beginning at i that are directly below the last corresponding node
-                mN[-1][0].extend([x[0] for x in oN[i:] if x[1] == (maxLvl + 1)])
-            for e in possibleAddees: # add all intermediately found unmatched nodes of T(other) to their already determined parent nodes in self
+                currentParent[-1].extend([x[0]
+                                          for x in oN[i:] if x[1] == maxLvl])
+            # next unmatched node from other is on the next level as the last
+            # correspondence
+            elif oN[i][1] == (maxLvl + 1):
+                # get only those nodes to append to self from other beginning
+                # at i that are directly below the last corresponding node
+                mN[-1][0].extend([x[0]
+                                  for x in oN[i:] if x[1] == (maxLvl + 1)])
+            # add all intermediately found unmatched nodes of T(other) to their
+            # already determined parent nodes in self
+            for e in possibleAddees:
                 e[0].append(e[1])
             self.removeMarkers(marker)
             result = True
@@ -390,21 +432,22 @@ class PLTAGTree(tree.Tree):
         PLTAG verification method. 
         Used to verify a previously predicted structure/subtree with the structure provided by a newly encounter word during parsing.
         In order to verify this method tries to find a correspondence of a subtree in a tree to another tree.
-        
+
         Therefore cycles through all possible integer markers found in self tree structure (all children and children's children).
         Tries to establish a corresponding correlation with each marker found in turn. 
         Does that till no more markers could be found or a valid correspondence appears.
         If a valid correspondence (see findCorrespondence doc) is found the completion of the verification process is also done 
         inside the findCorrespondence method due to local availability of parameters needed.
-        
+
         For further documentation about PLTAG verification please refer to Demberg, Keller and Koller (2013).
-        
+
         Returns:
             True if a corresponding subtree could be found and verification completed successfully
         """
         markers = []
         result = False
-        # implicit test for result is None as in no new not yet tested markers could be found overall
+        # implicit test for result is None as in no new not yet tested markers
+        # could be found overall
         while(not result and (markers[-1] if len(markers) > 0 else True)):
             marker = self.findFirstMarker(other, markers)
             result = self.findCorrespondence(other, marker)
@@ -414,38 +457,41 @@ class PLTAGTree(tree.Tree):
     def match(self, other, ignoreAffix=False, ignoreMorphCase=False, ignoreFunctionalCategory=True):
         """
         Matches this tree node with a given other to check if they are similar enough to be considered equal.
-        
+
         Args:
             other: the other PLTAG tree node to be tried for a match
             ignoreAffix: optional whether or not a possible affix '!' or '*' regarding the node label should be ignored
             ignoreFunctionalCategory: currently on ignore on default 
-            
+
         Returns:
             True if self matches other with the given conditions
         """
         result = False
         if ((self.morph == other.morph) or ignoreMorphCase) and ((self.functionalCategory == other.functionalCategory) or ignoreFunctionalCategory):
             if (ignoreAffix):
-                trimmedSelfLabel = self.label()[:-1] if (self.label().endswith("!") or self.label().endswith("*")) else self.label()
-                trimmedOtherLabel = other.label()[:-1] if (other.label().endswith("!") or other.label().endswith("*")) else other.label()
+                trimmedSelfLabel = self.label()[
+                    :-1] if (self.label().endswith("!") or self.label().endswith("*")) else self.label()
+                trimmedOtherLabel = other.label()[
+                    :-1] if (other.label().endswith("!") or other.label().endswith("*")) else other.label()
                 result = (trimmedSelfLabel == trimmedOtherLabel)
             else:
                 result = self.label() == other.label()
         return result
-    
+
     def matches(self, other, ignoreAffix=False, ignoreLexicalLeaves=False):
         """
         Matches this tree node with a given other to check if they are similar enough to be considered equal.
-        
+
         Args:
             other: the other PLTAG tree to be tried for a match
             ignoreAffix: optional whether or not a possible affix '!' or '*' regarding the node label should be ignored
-            
+
         Returns:
             True if self matches other with the given conditions
-            
+
         """
-        result = (self.match(other, ignoreAffix) and len(self) == len(other)) or (ignoreLexicalLeaves and self.isLexicalLeaf())
+        result = (self.match(other, ignoreAffix) and len(self) == len(other)) or (
+            ignoreLexicalLeaves and self.isLexicalLeaf())
         if result:
             for i in range(len(self)):
                 c = self[i]
@@ -460,10 +506,10 @@ class PLTAGTree(tree.Tree):
         Sets all node halves of this tree to a common marker.
         Sets only the lower node half of the first/root node and only the upper for each leaf or more 
         specifically each child without children of its own or only lexical payload.
-        
+
         Args:
             marker: optional integer value to be used to mark this tree - will be Util.uid if none given
-            
+
         Returns:
             the marker used for marking this tree
         """
@@ -483,11 +529,11 @@ class PLTAGTree(tree.Tree):
     def removeMarkers(self, marker):
         """
         Removes all given marker marker from each node half in self and recursively from our children.
-        
+
         Args:
             marker: integer value to be removed from this PLTAG tree
         """
-        self.upperNodeHalf = 'x' if self.upperNodeHalf == marker else self.upperNodeHalf #TODO: cure me from da magic
+        self.upperNodeHalf = 'x' if self.upperNodeHalf == marker else self.upperNodeHalf  # TODO: cure me from da magic
         self.lowerNodeHalf = 'x' if self.lowerNodeHalf == marker else self.lowerNodeHalf
         for c in self:
             if not isinstance(c, str):
@@ -496,7 +542,7 @@ class PLTAGTree(tree.Tree):
     def hasNoMarkers(self):
         """
         Determines whether or not this tree has any markings on its node halves.
-        
+
         Returns:
             True if no marker has been found on this node and its children
         """
@@ -505,8 +551,8 @@ class PLTAGTree(tree.Tree):
             result = False
         else:
             # its 05:30 a.m. and i got an error with string here - gn8
-            for c in self: # also this method is not well
-                if not isinstance(c, str): # maybe it should take a day off
+            for c in self:  # also this method is not well
+                if not isinstance(c, str):  # maybe it should take a day off
                     result = c.hasNoMarkers()
                     if not result:
                         break
@@ -515,20 +561,20 @@ class PLTAGTree(tree.Tree):
     def hasNoMarker(self):
         """
         Determines whether or not this node without regard to any children has a marking.
-        
+
         Returns:
             True if no marker has been found on either node half of self
         """
         return not (isinstance(self.upperNodeHalf, int) or isinstance(self.lowerNodeHalf, int))
 
-    def getCurrentFringe(self, forceNew = False):
+    def getCurrentFringe(self, forceNew=False):
         """
         Computes the fringe starting at the rightmost lexical leaf to either the next non lexical leaf or the root node.
         Searches for conditions met in the reversed list of all fringes of the self tree.
-        
+
         Args:
             forceNew: optional parameter to determine whether or not to use cached current fringe or calculate anew
-        
+
         Returns:
             list of PLTAGTree nodes
         """
@@ -544,11 +590,11 @@ class PLTAGTree(tree.Tree):
                     break
             self._currentFringe = [x[0] for x in fs[i:v + 1]]
         return self._currentFringe
-    
+
     def getFringes(self):
         """
         Fetches all fringes in self. Each Fringe goes from root or a leaf to the next leaf or overall ends back at root. 
-        
+
         Returns:
             list of tuple of PLTAGTree nodes and boolean (True for up or False for downward visit)
         """
@@ -561,7 +607,7 @@ class PLTAGTree(tree.Tree):
                 if start is None:
                     start = i
                 else:
-                    result.append(ns[start : (i + 1)])
+                    result.append(ns[start: (i + 1)])
                     start = None
         return result
 
@@ -577,13 +623,13 @@ class PLTAGTree(tree.Tree):
     def clone(self):
         """
         Computes and returns an exact copy of new objects of self.
-        
+
         Returns:
             deep copy of self
         """
         return copy.deepcopy(self)
-    
-    def setAsCurrentRoot(self, treeType = ElementaryTreeType.ARG):
+
+    def setAsCurrentRoot(self, treeType=ElementaryTreeType.ARG):
         self.treeType = treeType
         self.isCurrentRoot = True
         self._currentFringe = self.getCurrentFringe()
@@ -605,7 +651,7 @@ class PLTAGTree(tree.Tree):
         """
         Transforms a given PLTAG tree into a top to bottom, left to right representation of itself.
         First item is the root node then roots first child then roots first child first child and so on.
-        
+
         Args:
             tri: the PLTAG tree to be transformed with its children and children's children
             lvl: optional depth level of recursion into the tree
