@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Created on 04.01.2016
+Created on 16.03.2016
 
-@author: Albert
+@author: Benjamin Kosmehl
 """
 from builtins import isinstance
 from nltk import tree
@@ -81,9 +81,6 @@ class PLTAGTree(tree.Tree):
         Args:
             nodeString: string data for the tree to be constructed out of (i.e. 'VVPP-HD^x_x abgeklärt<>')
             children: list of trees to be appended to self
-
-        Returns:
-            self
         """
         #(VP-HD^null_x (VP-HD^x_null* )(VP-*T2*-RE^x_x (PP-*T1*-OP^x_null! )(VP
         if isinstance(nodeString, str):
@@ -153,13 +150,14 @@ class PLTAGTree(tree.Tree):
             self.upperNodeHalf = upperNodeHalfMarker
         # try to set node type and extend label with corresponding symbol -
         # only the lower node half marker can carry a type symbol
-        if lowerNodeHalfMarker:  # FIXME: !!
+        if lowerNodeHalfMarker:
             if lowerNodeHalfMarker.endswith(str(NodeType.SUBST)):
                 self.nodeType = NodeType.SUBST
             elif lowerNodeHalfMarker.endswith(str(NodeType.FOOT)):
                 self.nodeType = NodeType.FOOT
             else:
                 self.nodeType = NodeType.INNER
+            self.upperNodeHalf = lowerNodeHalfMarker
             self.set_label(self.label() + str(self.nodeType))
         # try to determine and extract lexical leaf data
         if lexicalPayload:
@@ -517,9 +515,9 @@ class PLTAGTree(tree.Tree):
         if marker is None:
             marker = Util.Util.uid()
             markedRoot = True
-        if not self.isLeaf():
+        if not self.lowerNodeHalf == "null":
             self.lowerNodeHalf = marker
-        if not markedRoot:
+        if not self.upperNodeHalf == "null" and not markedRoot:
             self.upperNodeHalf = marker
         for c in self:
             if not isinstance(c, str):
@@ -533,7 +531,7 @@ class PLTAGTree(tree.Tree):
         Args:
             marker: integer value to be removed from this PLTAG tree
         """
-        self.upperNodeHalf = 'x' if self.upperNodeHalf == marker else self.upperNodeHalf  # TODO: cure me from da magic
+        self.upperNodeHalf = 'x' if self.upperNodeHalf == marker else self.upperNodeHalf
         self.lowerNodeHalf = 'x' if self.lowerNodeHalf == marker else self.lowerNodeHalf
         for c in self:
             if not isinstance(c, str):
@@ -612,6 +610,16 @@ class PLTAGTree(tree.Tree):
         return result
 
     def _getNodeVisits(self):
+        """
+        Collects all nodes via a top to bottom, left to right traversal of 
+        the tree together with visit direction into a list.
+        Visits each node exactly twice - once coming from above and once while returning from below.
+        The visit from above will be saved as False.
+        The visit from below will me saved as True.
+        
+        Returns:
+            list of tuple containing a visited node and visited direction as boolean
+        """
         result = [(self, False)]
         for c in self:
             if type(c) is not PLTAGTree:
@@ -630,20 +638,52 @@ class PLTAGTree(tree.Tree):
         return copy.deepcopy(self)
 
     def setAsCurrentRoot(self, treeType=ElementaryTreeType.ARG):
+        """
+        Marks a tree as the root of its subtree.
+        Forces reevaluation of the current fringe.
+        
+        Args:
+            treeType: optional parameter to set the trees treeType as ElementaryTreeType
+        """
         self.treeType = treeType
         self.isCurrentRoot = True
-        self._currentFringe = self.getCurrentFringe()
+        self._currentFringe = self.getCurrentFringe(True)
 
     def isEmpty(self):
+        """
+        Determines whether this node has any more nodes as children or not.
+        Returns True if self is a lexical leaf.
+        
+        Returns:
+            True if node has no more nodes as children.
+        """
         return not (self.isLexicalLeaf() or (len(self) > 0))
 
     def isLeaf(self):
+        """
+        Determines whether this node has any more nodes as children or not.
+        Returns True if self is a lexical leaf.
+        
+        Returns:
+            True if node has no more nodes as children.
+        """
         return self.isLexicalLeaf() or self.isEmpty()
 
     def isLexicalLeaf(self):
+        """
+        Determines whether this node is the node holding the lexical anchor.
+        Returns True if self is a lexical leaf.
+        
+        Returns:
+            True if node has exactly one string as child.
+        """
         return (len(self) == 1) and isinstance(self[0], str)
 
     def draw(self):
+        """
+        Starts a tk window frame with canvas and displays this tree.
+        Taken from nltk.draw.
+        """
         TAGTreeUI(self).mainloop()
 
     @staticmethod

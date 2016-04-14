@@ -5,9 +5,10 @@ This module is copied and adjusted code from the nltk draw(tree) module:
 # Author: Edward Loper <edloper@gmail.com>
 # URL: <http://nltk.org/>
 redistributed and modified under its license http://www.apache.org/licenses/LICENSE-2.0 by Benjamin Kosmehl
-Created on 08.03.2016
 
-@author: Albert
+Created on 17.03.2016
+
+@author: Benjamin Kosmehl
 """
 
 from tkinter import IntVar, Menu, Tk

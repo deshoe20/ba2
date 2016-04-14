@@ -1,7 +1,7 @@
 """
 Created on 24.03.2016
 
-@author: Albert
+@author: Benjamin Kosmehl
 """
 import sys
 from os.path import dirname, abspath, join

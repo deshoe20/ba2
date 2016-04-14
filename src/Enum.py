@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Created on 16.01.2016
+Created on 16.03.2016
 
-@author: Albert
+@author: Benjamin Kosmehl
 """
 from enum import Enum
 
@@ -100,9 +100,6 @@ class FunctionalCategory(Enum):
         return getattr(cls, s.upper(), FunctionalCategory.UNDEF)
     
 class ElementaryTreeType(Enum):
-    """
-    classdocs
-    """
     ARG = 1 #initial tree
     MOD = 2 #modifier tree
     ADJ = 3 #auxiliary tree

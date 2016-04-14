@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Created on 27.02.2016
+Created on 16.03.2016
 
-@author: Albert
+@author: Benjamin Kosmehl
 """
 import sys
 from os.path import dirname, abspath, join
@@ -26,7 +26,7 @@ class ElementaryLexiconTest(unittest.TestCase):
     
     def test_01_SortMe(self):
         self.p.LEX.sortMe()
-        self.assertTrue(self.p.LEX['dieses'][0][0] == '143')
+        self.assertTrue(self.p.LEX['dieses'][0][0] == 143)
 
 if __name__ == "__main__":
     unittest.main(sortTestMethodsUsing=False, failfast=True)

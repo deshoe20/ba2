@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Created on 07.01.2016
+Created on 07.04.2016
 
-@author: Albert
+@author: Benjamin Kosmehl
 """
 from threading import Thread
 from Util import Util
@@ -12,12 +12,19 @@ from Enum import NodeType
 
 class PrefixTreeScanParser(Thread):
     """
-    classdocs
+    Tries to create a fit for two PLTAGTree.
+    
+    CLASS UNDER CONSTRUCTION
     """
 
     def __init__(self, prefixTree, elementaryTree, result):
         """
         Constructor
+        
+        Args:
+            prefixTree: prefix tree
+            elementaryTree: elementary tree
+            result: asynchronous Queue for possible results
         """
         super().__init__()
         self.PRED = Util.getPLEX()
@@ -28,6 +35,9 @@ class PrefixTreeScanParser(Thread):
         self.predictionDepth = int(Util.getConfigEntry()['prediction_depth'])
 
     def run(self):
+        """
+        Tries.
+        """
         # if none try prediction and again
         if (not self.prefixTree.isCurrentRoot) or (not self.elementaryTree.isCurrentRoot):
             logging.warning("WARNING - malformed tree detected!\n%s\n%s",
@@ -59,7 +69,7 @@ class PrefixTreeScanParser(Thread):
                 logging.debug(
                     "Integrated %s onto %s via up substitution: %s", str(t1), str(t2), str(temp))
 
-    # FIXME: in left and right - currently incremental criterium violated
+    # fix me: in left and right - currently incremental criterium violated
     def lookForAdjunctionDown(self, t1, t2):
         temp1 = t1.clone()
         temp2 = t2.clone()
@@ -96,7 +106,9 @@ class PrefixTreeScanParser(Thread):
                         "Integrated %s onto %s via up adjunction: %s", str(t1), str(t2), str(temp2))
 
     def lookForVerification(self):
+        # implement me
         return False
 
     def lookForPrediction(self):
+        # implement me
         return False

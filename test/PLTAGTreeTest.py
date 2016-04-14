@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Created on 27.02.2016
+Created on 16.03.2016
 
-@author: Albert
+@author: Benjamin Kosmehl
 """
 import sys
 from os.path import dirname, abspath, join

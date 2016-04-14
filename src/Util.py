@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Created on 04.01.2016
+Created on 16.03.2016
 
-@author: Albert
+@author: Benjamin Kosmehl
 """
 
 from os import path
@@ -19,7 +19,7 @@ import PredictionLexicon
 
 class Util(object):
     """
-    classdocs
+    Utility class.
     """
     _profileT = ConfigType.DEFAULT
     _loadedconfig = None
@@ -31,6 +31,9 @@ class Util(object):
     def __init__(self, params):
         """
         Constructor
+        
+        Args:
+            params: not used
         """
 
     i = 0
