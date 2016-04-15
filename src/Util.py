@@ -4,7 +4,7 @@ Created on 16.03.2016
 
 @author: Benjamin Kosmehl
 """
-
+from os.path import dirname, abspath, join
 from os import path
 import pickle
 from configparser import ConfigParser
@@ -75,8 +75,8 @@ class Util(object):
 
     @staticmethod
     def loadElementaryLexicon(reloadIfChanged=False):
-        rawLexPath = "../res/freq-parser-lexicon-tag.txt"
-        lexPath = "../res/pickeledTAGlexicon.pick"
+        rawLexPath = join(dirname(abspath(__file__)), "../res/freq-parser-lexicon-tag.txt")
+        lexPath = join(dirname(abspath(__file__)), "../res/pickeledTAGlexicon.pick")
         pltagTreeCls = PLTAGTree.PLTAGTree
         eleLexCls = ElementaryLexicon.ElementaryLexicon
         Util._reloadIfChanged(
@@ -85,8 +85,8 @@ class Util(object):
 
     @staticmethod
     def loadPredictionLexicon(reloadIfChanged=False):
-        rawLexPath = "../res/freq-parser-lexicon-prediction.txt"
-        lexPath = "../res/pickeledTAGPredictionlexicon.pick"
+        rawLexPath = join(dirname(abspath(__file__)), "../res/freq-parser-lexicon-prediction.txt")
+        lexPath = join(dirname(abspath(__file__)), "../res/pickeledTAGPredictionlexicon.pick")
         pltagTreeCls = PLTAGTree.PLTAGTree
         eleLexCls = PredictionLexicon.PredictionLexicon
         Util._reloadIfChanged(
@@ -127,6 +127,6 @@ class Util(object):
     def getConfigEntry(profileType=None):
         if Util._loadedconfig is None:
             c = ConfigParser()
-            c.read("../res/config.ini")
+            c.read(join(dirname(abspath(__file__)), "../res/config.ini"))
             Util._loadedconfig = c[str(Util._profileT if profileType is None else profileType)]
         return Util._loadedconfig

@@ -68,6 +68,7 @@ class PrefixTreeScanParser(Thread):
                 self.result.put(temp)
                 logging.debug(
                     "Integrated %s onto %s via up substitution: %s", str(t1), str(t2), str(temp))
+                break
 
     # fix me: in left and right - currently incremental criterium violated
     def lookForAdjunctionDown(self, t1, t2):
@@ -86,6 +87,7 @@ class PrefixTreeScanParser(Thread):
                     self.result.put(temp1)
                     logging.debug(
                         "Integrated %s onto %s via down adjunction: %s", str(t2), str(t1), str(temp2))
+                    break
 
     def lookForAdjunctionUp(self, t1, t2):
         temp1 = t1.clone()
@@ -96,7 +98,7 @@ class PrefixTreeScanParser(Thread):
             if n.nodeType == NodeType.FOOT and n.match(t1, True):
                 pos = n
         if pos is not None:
-            n = temp2.getFringes()[0]  # all or only the first fringe?
+            n = temp2.getFringes()[0]
             for f in n:
                 if (f[0].nodeType == NodeType.INNER) and f[0].match(pos, True):
                     f[0].adjunction(temp1)
@@ -104,6 +106,7 @@ class PrefixTreeScanParser(Thread):
                     self.result.put(temp2)
                     logging.debug(
                         "Integrated %s onto %s via up adjunction: %s", str(t1), str(t2), str(temp2))
+                    break
 
     def lookForVerification(self):
         # implement me

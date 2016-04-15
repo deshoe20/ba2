@@ -14,7 +14,7 @@ import logging
 
 if __name__ == '__main__':
     logging.getLogger().setLevel(logging.DEBUG) #TODO: move logging config to config file
-    logging.basicConfig(filename='../res/dev_a1.log', level=logging.DEBUG)
+    logging.basicConfig(filename=join(dirname(abspath(__file__)), '../res/dev_a2.log'), level=logging.DEBUG)
     console = logging.StreamHandler()
     console.setLevel(logging.DEBUG)
     formatter = logging.Formatter('%(module)-23s(%(levelname)-1s): %(message)s')
@@ -29,5 +29,5 @@ if __name__ == '__main__':
     # log6 : 14.08s with substitution and adjunction on current and only first fringe of to be integrated - stack: 1484
     # log7 : 39.63s same setting as above only move threads so they all be executed at the same time - stack: 1484
     # log8 : 233.39s semi-asynchronous wait - strange - stack: 1484
-
+    # log9 : 32.84s semi-asynchronous wait - strange - stack: 1372 # need to filter duplicate entries and fix adjunction
 #    sparser = TAGSerialParser("Ich liebe dieses Land sehr.") # 0.32s correct parse-tree - must be bugged
